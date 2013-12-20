@@ -1,0 +1,19 @@
+.scoreflexWebClient_full {
+  position:absolute;
+  bottom:0;
+  left:0;
+  height:50%;
+  width:100%;
+  border:1px solid #000;
+  border-width:1px 0;
+}
+
+.scoreflexWebClient_panel {
+  position:absolute;
+  bottom:0;
+  left:50%;
+  margin-left:-160px;
+  width:320px;
+  height:80px;
+  border:1px solid #000;
+}
