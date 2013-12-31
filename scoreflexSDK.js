@@ -1,3 +1,22 @@
+/*
+* Licensed to Scoreflex (www.scoreflex.com) under one
+* or more contributor license agreements. See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership. Scoreflex licenses this
+* file to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License. You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied. See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
+
 /**
  * Broswer requirements / module dependancies
  * - browser support for JSON API (or json2.js at http://www.JSON.org/json2.js)
@@ -102,6 +121,7 @@ Scoreflex.SDK = (function() {
     "sr", "sv", "sw", "ta", "th", "tl", "tr", "uk", "vi", "zh", "zh_CN",
     "zh_TW", "zh_HK"];
 
+  var _initialized = false;
   var _context = {
     clientId:null,
     clientSecret:null,
@@ -141,13 +161,14 @@ Scoreflex.SDK = (function() {
         }
       }
       if (xhr) {
-        if (handlers)
-        var h = ['onerror', 'ontimeout', 'onabort', 'onloadend'];
-        for (var i=0; i<h.length; i++) {
-          if (handlers[h[i]]) xhr[h[i]] = handlers[h[i]];
+        if (handlers) {
+          var h = ['onerror', 'ontimeout', 'onabort', 'onloadend'];
+          for (var i=0; i<h.length; i++) {
+            if (handlers[h[i]]) xhr[h[i]] = handlers[h[i]];
+          }
         }
         xhr.onload = function() {
-          if (handlers.onload) {
+          if (handlers && handlers.onload) {
             xhr.responseJSON = parseJSON(this.responseText);
             handlers.onload.apply(this, arguments);
           }
@@ -362,6 +383,7 @@ Scoreflex.SDK = (function() {
         case '200000': // logout
           close(iframeId);
           setSession(null, true);
+          fetchAnonymousAccessTokenIfNeeded();
           Scoreflex.Helper.fireEvent(window, 'ScoreflexEvent', {name:'session', logout:true});
           break;
 
@@ -617,7 +639,6 @@ Scoreflex.SDK = (function() {
   //-- STORAGE end
 
   //-- SDK continued
-  var _initialized = false;
 
   /**
    * private
@@ -716,8 +737,37 @@ Scoreflex.SDK = (function() {
   /**
    * private
    */
-  var fetchAnonymousAccessTokenIfNeeded = function(handlers) {
+  var fetchAnonymousAccessTokenIfNeeded = function() {
     var session = getSession();
+
+    var onLoad = function() {
+      // we may not have a response in case the locally-stored session already existed
+      var json = this.responseJSON || {};
+      var accessToken = (json.accessToken || {}).token || null;
+      var sid = json.sid || null;
+      var me = json.me || {};
+      var playerId = me.id || null;
+      var lang = me.language || null;
+      if (accessToken && sid && playerId) {
+        setSession({
+          anonymous:true,
+          accessToken:accessToken,
+          sid:sid,
+          playerId:playerId,
+          lang:lang,
+          me:me
+        }, false);
+      }
+      _initialized = true;
+    };
+    var onError = function() {
+      //console.log('error');
+    };
+    var handlers = {
+      onload: onLoad,
+      onerror: onError
+    };
+
     if (session && session.accessToken && session.sid && session.playerId) {
       if (handlers.onload) {
         setTimeout(handlers.onload, 0);
@@ -749,6 +799,7 @@ Scoreflex.SDK = (function() {
         var playerId = me.id || null;
         var lang = me.language || null;
         if (accessToken && sid && playerId) {
+          // save authenticated player in local session
           setSession({
             anonymous:false,
             accessToken:accessToken,
@@ -757,6 +808,8 @@ Scoreflex.SDK = (function() {
             lang:lang,
             me:me
           }, true);
+          // remove ghost player from local session
+          setSession(null, false);
         }
         showProfile();
         Scoreflex.Helper.fireEvent(window, 'ScoreflexEvent', {name:'session', login:true});
@@ -775,7 +828,8 @@ Scoreflex.SDK = (function() {
   };
 
   /**
-   * public
+   * @visibility public
+   * @param Object handlers
    */
   var ping = function(handlers) {
     var params = {};
@@ -783,15 +837,11 @@ Scoreflex.SDK = (function() {
   };
 
   /**
-   * public
-   */
-  var logout = function() {
-
-  };
-
-  /**
-   * public
    * Set environment, ensure we have an accessToken
+   * @visibility public
+   * @param string clientId
+   * @param stirng clientSecret
+   * @param boolean useSandbox
    */
   var initialize = function(clientId, clientSecret, useSandbox) {
     if (!isInitialized()) {
@@ -799,42 +849,18 @@ Scoreflex.SDK = (function() {
       _context.clientSecret = clientSecret;
       _context.useSandbox = useSandbox;
 
-      var onLoad = function() {
-        // we may not have a response in case the locally-stored session already existed
-        var json = this.responseJSON || {};
-        var accessToken = (json.accessToken || {}).token || null;
-        var sid = json.sid || null;
-        var me = json.me || {};
-        var playerId = me.id || null;
-        var lang = me.language || null;
-        if (accessToken && sid && playerId) {
-          setSession({
-            anonymous:true,
-            accessToken:accessToken,
-            sid:sid,
-            playerId:playerId,
-            lang:lang,
-            me:me
-          }, false);
-        }
-        _initialized = true;
-      };
-      var onError = function() {
-        //console.log('error');
-      };
-      handlers = {
-        onload: onLoad,
-        onerror: onError
-      };
-
-      fetchAnonymousAccessTokenIfNeeded(handlers);
+      fetchAnonymousAccessTokenIfNeeded();
     }
   };
 
   /**
-   * public
+   * @visibility public
+   * @param string leaderboarId
+   * @param int score
+   * @param Object parameters
+   * @param Object handlers
    */
-  var submitScore = function(leaderboardId, score, parameters) {
+  var submitScore = function(leaderboardId, score, parameters, handlers) {
     if (!isInitialized()) return;
     var params = {score:score};
     params = pushParameters(params, parameters);
@@ -843,12 +869,81 @@ Scoreflex.SDK = (function() {
   };
 
   /**
+   * @visibility public
+   * @param string instanceId
+   * @param Object parameters - fields (string): "core,config,turn,turnHistory,outcome"
+   * @param Object handlers
+   */
+  var getChallengeInstance = function(instanceId, parameters, handlers) {
+    if (!isInitialized()) return;
+    var params = pushParameters(params, parameters);
+    RestClient.get("/challenges/instances/"+instanceId, params, handlers);
+  };
+
+  /**
+   * @visibility public
+   * @param string instanceId
+   * @param Object parameters
+   * @param Object handlers
+   */
+  var getChallengeTurns = function(instanceId, parameters, handlers) {
+    if (!isInitialized()) return;
+    var params = pushParameters(params, parameters);
+    RestClient.get("/challenges/instances/"+instanceId+"/turns", params, handlers);
+  };
+
+  /**
+   * Generic function to submit a challenge player's turn
+   * @visibilty public
+   * @param string instanceId
+   * @param Object turnBody
+   * @param Object parameters
+   * @params Object handlers
+   */
+  var submitChallengeTurn = function(instanceId, turnBody, parameters, handlers) {
+    if (!isInitialized()) return;
+    if (!turnBody || turnBody.turnSequence === undefined) {
+      // request the turnSequence if we don't have it
+      getChallengeInstance(instanceId, {fields:"turn"}, {
+        onload: function() {
+          var json = this.responseJSON || {};
+          var turnSequence = (json.turn || {}).sequence || 0;
+          var newTurnBody = turnBody || {};
+          newTurnBody.turnSequence = turnSequence;
+          submitChallengeTurn(instanceId, newTurnBody, parameters, handlers);
+        },
+        onerror: (handlers || {}).onerror
+      });
+    }
+    else {
+      // do the real turn post, with the turnSequence
+      var params = {body:JSON.stringify(turnBody)};
+      params = pushParameters(params, parameters);
+      var body = undefined;
+      RestClient.post("/challenges/instances/"+instanceId+"/turns", params, body, handlers);
+    }
+  };
+
+  /**
+   * Specialized function submit a challenge player's turn with a score only
+   * @visibility public
+   * @param string instanceId
+   * @param int score
+   * @param Object parameters
+   * @param Object handlers
+   */
+  var submitChallengeTurnScore = function(instanceId, score, parameters, handlers) {
+    var turnBody = {score:score};
+    submitChallengeTurn(instanceId, turnBody, parameters, handlers);
+  };
+
+  /**
    * == WEB API ==
    */
 
   /**
    * Display web client to signin the current anonymous player
-   * @visibility public
+   * @visibility private
    * @param Object parameters
    * @param Object options
    */
@@ -974,6 +1069,20 @@ Scoreflex.SDK = (function() {
     WebClient.show("/web/challenges", params, options, defaultOpt);
   };
 
+  /**
+   * display a web client witht the details of a challenge instance
+   * @visibility public
+   * @param string instanceIf
+   * @param Object parameters
+   * @param Object options
+   */
+  var showChallengeInstance = function(instanceId, parameters, options) {
+    if (!isInitialized()) return;
+    var params = pushParameters({}, parameters);
+    var defaultOpt = {style:'full'};
+    WebClient.show("/web/challenges/instances/"+instanceId, params, options, defaultOpt);
+  };
+
 
   /**
    * public API
@@ -986,17 +1095,21 @@ Scoreflex.SDK = (function() {
     // rest api
     ping:ping,
     submitScore:submitScore,
+    getChallengeInstance:getChallengeInstance,
+    getChallengeTurns:getChallengeTurns,
+    submitChallengeTurn:submitChallengeTurn,
+    submitChallengeTurnScore:submitChallengeTurnScore,
     // web api
     showWebClient:WebClient.show,
     closeWebClient:WebClient.close,
-    authorize:authorize,
     showProfile:showProfile,
     showFriends:showFriends,
     showLeaderboard:showLeaderboard,
     showLeaderboardOverview:showLeaderboardOverview,
     showRankbox:showRankbox,
     submitScoreAndShowRankbox:submitScoreAndShowRankbox,
-    showChallenges:showChallenges
+    showChallenges:showChallenges,
+    showChallengeInstance:showChallengeInstance
   };
 
 })();
