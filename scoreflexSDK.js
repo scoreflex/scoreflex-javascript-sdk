@@ -74,17 +74,47 @@ Scoreflex.Helper = {
     replace(/\)/g, '%29').replace(/\*/g, '%2A');
   },
 
-  getBrowserID: function() {
-    var browserFeatures = navigator.userAgent + navigator.platform + screen.width + 'x'+ screen.height;
-    var len = navigator.mimeTypes.length;
-    for (var i = 0; i < len; i++) {
-      browserFeatures +=  navigator.mimeTypes[i].description +  navigator.mimeTypes[i].type;
-    }
-    if (typeof window.GearsFactory == 'function') {
-      browserFeatures += "gears";
+  getUUID: function() {
+    // generates an unique id
+    // inspired by
+    // https://github.com/broofa/node-uuid/blob/master/uuid.js (MIT license)
+    // http://stackoverflow.com/questions/6906916/collisions-when-generating-uuids-in-javascript
 
+    // generate some random numbers
+    var nums = new Array(31);
+
+    if (window.crypto && crypto.getRandomValues) {
+      // WHATWG crypto-based RNG - http://wiki.whatwg.org/wiki/Crypto
+      // Moderately fast, high quality
+      var _rnds8 = new Uint8Array(31);
+      crypto.getRandomValues(_rnds8);
+      for (var i = 0; i < 31; i++) {
+        nums[i] = _rnds8[i] & 0xf;
+      }
     }
-    return CryptoJS.HmacSHA1(browserFeatures, 'scoreflex');
+    else {
+      // Math.random()-based (RNG)
+      for (var i = 0, r; i < 31; i++) {
+        nums[i] = Math.random()*16|0;
+      };
+    }
+
+    var p = 0;
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = nums[p++], v = c == 'x' ? r : (r&0x3|0x8);
+      return v.toString(16);
+    });
+  },
+
+  getDeviceId: function() {
+    var deviceId;
+    var key = "deviceId";
+    if (window.localStorage) deviceId = localStorage.getItem(key);
+    if (!deviceId) {
+      deviceId = this.getUUID() + '-' + (+new Date()).toString(16);
+      if (window.localStorage) localStorage.setItem(key, deviceId);
+    }
+    return deviceId;
   },
 
   /**
@@ -614,7 +644,7 @@ Scoreflex.SDK = (function() {
   //-- WEB API end
 
   //-- STORAGE
-  Storage = (function(){
+  var Storage = (function(){
     _ns = 'SFX_';
     get = function(key) {
       var s = localStorage.getItem(_ns + key);
@@ -728,7 +758,8 @@ Scoreflex.SDK = (function() {
     var params = {
       clientId: context.clientId,
       devicePlatform: 'Web',
-      deviceModel: window.navigator.userAgent || 'browser'
+      deviceModel: window.navigator.userAgent || 'browser',
+      deviceId:Scoreflex.Helper.getDeviceId()
     };
     var body = undefined;
     RestClient.post("/oauth/anonymousAccessToken", params, body, handlers);
@@ -956,6 +987,7 @@ Scoreflex.SDK = (function() {
         clientId: context.clientId,
         devicePlatform: 'Web',
         deviceModel: window.navigator.userAgent || 'browser',
+        deviceId:Scoreflex.Helper.getDeviceId(),
         state: getOauthState(true)
       };
       if (session.accessToken) {
