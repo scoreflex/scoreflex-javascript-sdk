@@ -190,7 +190,6 @@ Scoreflex.SDK = (function() {
     };
 
     var getSignature = function(method, url, params, body) {
-      var secret = getContext().clientSecret;
       if (body === undefined) body = '';
       if (params === undefined) params = [];
       var i;
@@ -240,6 +239,7 @@ Scoreflex.SDK = (function() {
                  + '&'
                  + encode(body);
 
+      var secret = getContext().clientSecret;
       var hash = CryptoJS.HmacSHA1(string, secret);
       var hashB64 = hash.toString(CryptoJS.enc.Base64);
       var sig = encode(hashB64);
@@ -359,7 +359,7 @@ Scoreflex.SDK = (function() {
   //-- REST API end
 
   //-- WEB API
-  WebClient = (function(){
+  var WebClient = (function(){
 
     /**
      * CONSTANTS
