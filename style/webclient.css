@@ -2,10 +2,11 @@
   position:absolute;
   bottom:0;
   left:0;
-  height:50%;
+  height:100%;
   width:100%;
-  border:1px solid #000;
-  border-width:1px 0;
+  border-style:solid;
+  border-color:#000;
+  border-width:0;
 }
 
 .scoreflexWebClient_panel {
