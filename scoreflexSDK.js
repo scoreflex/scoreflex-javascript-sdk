@@ -194,13 +194,24 @@ Scoreflex.SDK = (function() {
         if (handlers) {
           var h = ['onerror', 'ontimeout', 'onabort', 'onloadend'];
           for (var i=0; i<h.length; i++) {
-            if (handlers[h[i]]) xhr[h[i]] = handlers[h[i]];
+            if (handlers[h[i]]) {
+              xhr[h[i]] = handlers[h[i]];
+            }
           }
         }
         xhr.onload = function() {
-          if (handlers && handlers.onload) {
-            xhr.responseJSON = parseJSON(this.responseText);
-            handlers.onload.apply(this, arguments);
+          if (handlers) {
+            try {
+              xhr.responseJSON = parseJSON(this.responseText);
+            }
+            catch(e){}
+            var status = this.status;
+            if (status == 200 && handlers.onload) {
+              handlers.onload.apply(this, arguments);
+            }
+            else if (handlers.onerror) {
+              handlers.onerror.apply(this, arguments);
+            }
           }
         };
         if (method === 'POST') {
@@ -340,6 +351,7 @@ Scoreflex.SDK = (function() {
       return params;
     };
 
+
     /**
      * private
      */
@@ -375,7 +387,6 @@ Scoreflex.SDK = (function() {
       var parameters = paramsToQueryString(params);
       var headers = {
         "Content-type": "application/x-www-form-urlencoded",
-        //"X-Scoreflex-Lenient": "yes"
         "X-Scoreflex-Authorization": Common.getSignature('POST', url, params, body)
       };
       Common.request('POST', url, parameters, body, headers, handlers);
