@@ -25,7 +25,7 @@
  * - browser support for classList API
  *
  **/
-var Scoreflex = function() {
+var Scoreflex = function(clientId, clientSecret, useSandbox) {
 
 // create namespace
 var Scoreflex = {};
@@ -141,7 +141,7 @@ Scoreflex.Helper = {
 };
 
 // SDK
-Scoreflex.SDK = (function() {
+Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   var DEFAULT_LANGUAGE_CODE = "en";
   var VALID_LANGUAGE_CODES = ["af", "ar", "be",
     "bg", "bn", "ca", "cs", "da", "de", "el", "en", "en_GB", "en_US", "es",
@@ -1127,6 +1127,8 @@ Scoreflex.SDK = (function() {
   };
 
 
+  initialize(clientId, clientSecret, useSandbox);
+
   /**
    * public API
    */
@@ -1134,7 +1136,6 @@ Scoreflex.SDK = (function() {
     get:RestClient.get,
     post:RestClient.post,
     reset:reset, // erase localStorage data
-    initialize:initialize,
     // rest api
     ping:ping,
     submitScore:submitScore,
@@ -1155,7 +1156,7 @@ Scoreflex.SDK = (function() {
     showChallengeInstance:showChallengeInstance
   };
 
-})();
+})(clientId, clientSecret, useSandbox);
 
 return Scoreflex.SDK;
 
