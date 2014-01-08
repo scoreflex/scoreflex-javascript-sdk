@@ -17,23 +17,43 @@
 * under the License.
 */
 
-/**
+/*
+ * To regenerate the documentation:
+ * jsdoc -d=jsdoc/ scoreflexSDK.js
+ */
+
+/*
  * Broswer requirements / module dependancies
  * - browser support for JSON API (or json2.js at http://www.JSON.org/json2.js)
  * - browser support for localStorage API
  * - browser support for XMLHttpRequest2 (support for CORS requests)
  * - browser support for classList API
- *
+ */
+
+/**
+ * Construct a ScoreflexSDK instance
+ * @module Scoreflex
+ * @param {string} clientId
+ * @param {string} clientSecret
+ * @param {boolean} useSandbox
+ * @return {object} Scoreflex SDK
  **/
 var Scoreflex = function(clientId, clientSecret, useSandbox) {
 
-// create namespace
 var Scoreflex = {};
 
-// helper
+/**
+ * Helper methods. Private to Scoreflex namespace.
+ * @namespace Scoreflex.Helper
+ * @private
+ */
 Scoreflex.Helper = {
   /**
-   * public
+   * Test an element belongs to an Array
+   * @private
+   * @param {mixed} el
+   * @param {Array} arr
+   * @return boolean
    */
   inArray: function(el, arr) {
     for (var i=0; i<arr.length; i++) {
@@ -43,7 +63,10 @@ Scoreflex.Helper = {
   },
 
   /**
-   * public
+   * Encode url parts
+   * @private
+   * @param {string} str
+   * @return {string} encoded string
    */
   rawurlencode: function(str) {
     // From: http://phpjs.org/functions
@@ -74,6 +97,11 @@ Scoreflex.Helper = {
     replace(/\)/g, '%29').replace(/\*/g, '%2A');
   },
 
+  /**
+   * Generate an universal unique identifier
+   * @private
+   * @return {string} uuid
+   */
   getUUID: function() {
     // generates an unique id
     // inspired by
@@ -106,6 +134,11 @@ Scoreflex.Helper = {
     });
   },
 
+  /**
+   * Generate a deviceId from an uuid
+   * @private
+   * @return {string} deviceId
+   */
   getDeviceId: function() {
     var deviceId;
     var key = "deviceId";
@@ -118,7 +151,12 @@ Scoreflex.Helper = {
   },
 
   /**
-   * public
+   * Dispatch an event on an element
+   * @private
+   * @param DOMElement element
+   * @param {string} eventType
+   * @param {object} data
+   * @return boolean success
    */
   fireEvent: function(element, eventType, data) {
     var evt;
@@ -140,7 +178,11 @@ Scoreflex.Helper = {
 
 };
 
-// SDK
+/**
+ * Scoreflex SDK methods
+ * @namespace Scoreflex
+ * @public
+ */
 Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   var DEFAULT_LANGUAGE_CODE = "en";
   var VALID_LANGUAGE_CODES = ["af", "ar", "be",
@@ -163,8 +205,21 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     playerId:null
   };
 
+
   //-- Common
+  /**
+   * Common
+   * @namespace Scoreflex.SDK.Common
+   * @private
+   */
   var Common = (function() {
+    /**
+     * Get an XMLHttpRequest2 object supporting CORS.
+     * @private
+     * @param {string} method
+     * @param {string} url
+     * @return {XMLHttpRequest}
+     */
     var getXHR = function(method, url) {
       var xhr = new XMLHttpRequest();
       if ("withCredentials" in xhr) {
@@ -183,6 +238,16 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       return xhr;
     };
 
+    /**
+     * Ajax call
+     * @private
+     * @param {string} method
+     * @param {string} url
+     * @param {object} params in query string
+     * @param {mixed} body (not supported yet)
+     * @param {object} headers
+     * @param {object} handlers
+     */
     var request = function(method, url, params, body, headers, handlers) {
       var xhr = getXHR(method, url);
       if (headers !== undefined) {
@@ -223,6 +288,13 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       }
     };
 
+    /**
+     * sort list of objects
+     * @private
+     * @param {object} a
+     * @param {object} b
+     * @return {int}
+     */
     var _sortParams = function(a, b) {
       if (a.k == b.k) {
         return a.v < b.v ? -1 : 1;
@@ -230,6 +302,15 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       return a.k < b.k ? -1 : 1;
     };
 
+    /**
+     * generate the signature for ajax call
+     * @private
+     * @param {string} method
+     * @param {string} url
+     * @param {object} params
+     * @param {string} body
+     * @return {string} signature
+     */
     var getSignature = function(method, url, params, body) {
       if (body === undefined) body = '';
       if (params === undefined) params = [];
@@ -287,6 +368,12 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       return 'Scoreflex sig="'+sig+'", meth="0"';
     };
 
+    /**
+     * Turn a JSON-string into a JavaScript object
+     * @private
+     * @param {string} text
+     * @return {object}
+     */
     var parseJSON = function(text) {
       try {
         var json = JSON.parse(text);
@@ -296,6 +383,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       return null;
     };
 
+    /**
+     * public Common API
+     * @constructor
+     * @alias module:Scoreflex.SDK.Common
+     */
     return {
       request:request,
       getSignature:getSignature
@@ -304,32 +396,26 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   })();
   //-- Common end
 
+
   //-- REST API
+  /**
+   * RestClient
+   * @namespace Scoreflex.SDK.RestClient
+   * @private
+   */
   var RestClient = (function() {
-    /**
+    /*
      * CONSTANTS
      */
     var API_VERSION = 'v1';
     var PRODUCTION_API_URL = 'https://api.scoreflex.com';
     var SANDBOX_API_URL = 'https://sandbox.api.scoreflex.com';
 
-    var ERROR_INVALID_PARAMETER = 10001;
-    var ERROR_MISSING_MANDATORY_PARAMETER = 10002;
-    var ERROR_INVALID_ACCESS_TOKEN = 11003;
-    var ERROR_SECURE_CONNECTION_REQUIRED = 10005;
-    var ERROR_INVALID_PREV_NEXT_PARAMETER = 12011;
-    var ERROR_INVALID_SID = 12017;
-    var ERROR_SANDBOX_URL_REQUIRED = 12018;
-    var ERROR_INACTIVE_GAME = 12019;
-    var ERROR_MISSING_PERMISSIONS = 12020;
-    var ERROR_PLAYER_DOES_NOT_EXIST = 12000;
-    var ERROR_DEVELOPER_DOES_NOT_EXIST = 12001;
-    var ERROR_GAME_DOES_NOT_EXIST = 12002;
-    var ERROR_LEADERBOARD_CONFIG_DOES_NOT_EXIST = 12004;
-    var ERROR_SERVICE_EXCEPTION = 12009;
-
     /**
-     * private
+     * Get the url to reach REST API endpoint
+     * @private
+     * @param {string} path
+     * @return {string} url
      */
     var getUrl = function(path) {
       return (getContext().useSandbox ? SANDBOX_API_URL : PRODUCTION_API_URL)
@@ -338,7 +424,10 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     };
 
     /**
-     * private
+     * Add parameters common to all REST API calls
+     * @private
+     * @param {object} params
+     * @return {object} all params
      */
     var addCommonParams = function(params) {
       if (params === undefined) params = {};
@@ -353,7 +442,10 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
 
     /**
-     * private
+     * Turn a list of object parameters to a query string
+     * @private
+     * @param {object} params
+     * @return {string} query string
      */
     var paramsToQueryString = function(params) {
       var p = [];
@@ -364,7 +456,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     };
 
     /**
-     * public
+     * Perform a GET request to Scoreflex REST API
+     * @private
+     * @param {string} path
+     * @param {object} params
+     * @param {object} handlers
      */
     var get = function(path, params, handlers) {
       params = addCommonParams(params);
@@ -379,7 +475,12 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     };
 
     /**
-     * public
+     * Perform a POST request to Scoreflex REST API
+     * @private
+     * @param {string} path
+     * @param {object} params
+     * @param {mixed} body
+     * @param {object} handlers
      */
     var post = function(path, params, body, handlers) {
       params = addCommonParams(params);
@@ -392,6 +493,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       Common.request('POST', url, parameters, body, headers, handlers);
     };
 
+    /**
+     * public RestClient API
+     * @constructor
+     * @alias module:Scoreflex.SDK.RestClient
+     */
     return{
       post:post,
       get:get
@@ -399,23 +505,37 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   })();
   //-- REST API end
 
+
   //-- WEB API
+  /**
+   * WebClient
+   * @namespace Scoreflex.SDK.WebClient
+   * @private
+   */
   var WebClient = (function(){
 
-    /**
+    /*
      * CONSTANTS
      */
     var API_VERSION = 'v1';
     var PRODUCTION_WEBAPI_URL = 'https://api.scoreflex.com';
     var SANDBOX_WEBAPI_URL = 'https://sandbox.api.scoreflex.com';
 
-    /**
+    /*
      * Variables
      */
     var iframes = {};
     var iframesW = {};
     var stackIds = [];
 
+    /**
+     * Catch WebClient event messages.
+     * Apply action or dispatch local event.
+     *
+     * @private
+     * @param {object} params - parameters of the event sent
+     * @param {string} iframeId - identifier of the WebClient iframe sending the event
+     */
     var handleCallback = function(params, iframeId) {
       var code = params.code;
       var data = params.data ? JSON.parse(decodeURIComponent(params.data)) : {};
@@ -489,6 +609,12 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       }
     };
 
+    /**
+     * Apply a style to a WebClient iframe
+     * @private
+     * @param {DOMIframeElement} iframe
+     * @param {object} opt
+     */
     var applyStyle = function(iframe, opt) {
       var styleName = "scoreflexWebClient_"+opt.style;
       if (styleName !== undefined) {
@@ -501,6 +627,12 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       }
     };
 
+    /**
+     * Get a reference to a WebClient iframe
+     * @private
+     * @param {string} id - reference name of the iframe
+     * @return {DOMIframeElement}
+     */
     var getIframe = function(id) {
       if (!iframes[id]) {
         var iframe = document.createElement('iframe');
@@ -513,10 +645,20 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       return iframes[id];
     };
 
+    /**
+     * Set an iframe as the last opened/used one
+     * @private
+     * @param {string} id
+     */
     var stackTop = function(id) {
       stackRemove(id);
       stackIds.push(id);
     };
+    /**
+     * Remove an iframe from the opened/used stack
+     * @private
+     * @param {string} id
+     */
     var stackRemove = function(id) {
       for (var i=0; i<stackIds.length; i++) {
         if (stackIds[i] === id) {
@@ -525,6 +667,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
         }
       }
     };
+    /**
+     * Get the last opened/used iframe id
+     * @private
+     * @return {string|null} iframe id
+     */
     var getStackTopId = function() {
       if (stackIds.length > 0) {
         return stackIds[stackIds.length-1];
@@ -533,6 +680,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     };
 
     var lastUrlHandled = null;
+    /**
+     * Internal callback for WebClient events
+     * @private
+     * @param {event} event
+     */
     var onUrlChange = function(event) {
       if (event.origin == PRODUCTION_WEBAPI_URL || event.origin == SANDBOX_WEBAPI_URL) {
         var url = event.data;
@@ -570,6 +722,13 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
     window.addEventListener("message", onUrlChange, false);
 
+    /**
+     * Add parameters common to all WEB API calls
+     * @private
+     * @param {object} params
+     * @param {object} options (.noSid)
+     * @return {object} all params
+     */
     var addCommonParams = function(params, options) {
       if (params === undefined) params = {};
       if (options === undefined) options = {};
@@ -582,6 +741,13 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       return params;
     };
 
+    /**
+     * Merge WebClient options
+     * @private
+     * @param {object} options
+     * @param {object} defaultOptions
+     * @return {object} merged options
+     */
     var mergeOptions = function(options, defaultOptions) {
       var opt = options || {};
       if (defaultOptions !== undefined) {
@@ -594,6 +760,14 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       return opt;
     };
 
+    /**
+     * Build the url for the WebClient
+     * @private
+     * @param {string} path
+     * @param {object} params - query string parameters
+     * @param {object} options - query string options (.noSid)
+     * @return {string|null} url
+     */
     var getUrl = function(path, params, options) {
       if (path.indexOf('://') !== -1) {
         // we have an absolute url. No process required
@@ -616,6 +790,14 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       return null;
     };
 
+    /**
+     * Display a WebClient
+     * @private
+     * @param {string} path
+     * @param {object} params
+     * @param {object} options - query string options and WebClient options
+     * @param {object} defaultOptions
+     */
     var show = function(path, params, options, defautOptions) {
       var opt = mergeOptions(options, defautOptions);
       var url = getUrl(path, params, opt);
@@ -632,6 +814,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       }
     };
 
+    /**
+     * Close the WebClient iframe identified by iframeId, or the last opened/used one
+     * @private
+     * @param {string} iframeId
+     */
     var close = function(iframeId) {
       var iframe;
       if (!iframeId) {
@@ -647,6 +834,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       }
     };
 
+    /**
+     * public WebClient API
+     * @constructor
+     * @alias module:Scoreflex.SDK.WebClient
+     */
     return {
       show:show,
       close:close
@@ -654,23 +846,51 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   })();
   //-- WEB API end
 
+
   //-- STORAGE
+  /**
+   * Storage using localStorage
+   * @namespace Scoreflex.SDK.Storage
+   * @private
+   */
   var Storage = (function(){
     _ns = 'SFX_';
-    get = function(key) {
+    /**
+     * Get an object by key
+     * @private
+     * @param {string} key
+     * @return {object}
+     */
+    var get = function(key) {
       var s = localStorage.getItem(_ns + key);
       if (s) {
         return JSON.parse(s);
       }
       return null;
     };
-    set = function(key, data) {
+    /**
+     * Associate an object to a key
+     * @private
+     * @param {string} key
+     * @param {object} data
+     */
+    var set = function(key, data) {
       var s = JSON.stringify(data);
       return localStorage.setItem(_ns + key, s);
     };
-    rm = function(key) {
+    /**
+     * Remove object associated with a key
+     * @private
+     * @param {string} key
+     */
+    var rm = function(key) {
       return localStorage.removeItem(_ns + key);
     };
+    /**
+     * public Storage API
+     * @constructor
+     * @alias module:Scoreflex.SDK.Storage
+     */
     return {
       get:get,
       set:set,
@@ -680,16 +900,19 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   //-- STORAGE end
 
   //-- SDK continued
-
   /**
-   * private
+   * Get Game context
+   * @private
+   * @return {object}
    */
   var getContext = function() {
     return _context;
   };
 
   /**
-   * private
+   * Get Player session
+   * @private
+   * @return {object}
    */
   var getSession = function() {
     var sessions = Storage.get('sessions');
@@ -701,7 +924,10 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   };
 
   /**
-   * private
+   * Set Player session
+   * @private
+   * @param {object} session
+   * @param {bool} logged
    */
   var setSession = function(session, logged) {
     var sessions = Storage.get('sessions');
@@ -716,23 +942,29 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   };
 
   /**
-   * public
+   * Delete Player session
+   * @public
    */
   var reset = function() {
     Storage.rm('sessions');
   };
 
   /**
-   * private
+   * Check the session is successfully initialized.
+   * @private
+   * @return {bool}
    */
   var isInitialized = function() {
     return _initialized;
   };
 
-  /**
-   * private
-   */
   var _oauthState = null;
+  /**
+   * Get or generate the oauth state parameter
+   * @private
+   * @param {bool} regen
+   * @return {string}
+   */
   var getOauthState = function(regen) {
     if (regen === true || _oauthState === null) {
       _oauthState = 'S' + (+(new Date()));
@@ -741,7 +973,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   };
 
   /**
-   * private
+   * Merge two lists of parameters
+   * @private
+   * @param {object} params
+   * @param {object} parameters
+   * @return {object} merged list
    */
   var pushParameters = function(params, parameters) {
     if (params === undefined) params = {};
@@ -753,16 +989,18 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     return params;
   };
 
-  /*************************
-   * * * * API CALLS * * * *
-   *************************/
+  /*++++++++++++++++++++++++
+   + + + + API CALLS + + + +
+   +++++++++++++++++++++++++*/
 
-  /**
+  /*
    * == REST API ==
    */
 
   /**
-   * private
+   * Request an anonymous access token for a guest
+   * @private
+   * @param {object} handlers
    */
   var fetchAnonymousAccessToken = function(handlers) {
     var context = getContext();
@@ -777,7 +1015,8 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   };
 
   /**
-   * private
+   * Request an anonymous access token for a guest if no local token exists
+   * @private
    */
   var fetchAnonymousAccessTokenIfNeeded = function() {
     var session = getSession();
@@ -821,7 +1060,9 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   };
 
   /**
-   * private
+   * Request an access token for a logged Player
+   * @private
+   * @param {object} data with keys 'code' and 'state'
    */
   var fetchAccessToken = function(data) {
     var state = data.state;
@@ -870,8 +1111,9 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   };
 
   /**
-   * @visibility public
-   * @param Object handlers
+   * Ping Scoreflex server
+   * @public
+   * @param {object} handlers
    */
   var ping = function(handlers) {
     var params = {};
@@ -880,10 +1122,10 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
   /**
    * Set environment, ensure we have an accessToken
-   * @visibility public
-   * @param string clientId
-   * @param stirng clientSecret
-   * @param boolean useSandbox
+   * @public
+   * @param {string} clientId
+   * @param {string} clientSecret
+   * @param {boolean} useSandbox
    */
   var initialize = function(clientId, clientSecret, useSandbox) {
     if (!isInitialized()) {
@@ -896,11 +1138,12 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   };
 
   /**
-   * @visibility public
-   * @param string leaderboarId
-   * @param int score
-   * @param Object parameters
-   * @param Object handlers
+   * Send a score to a leaderboard
+   * @public
+   * @param {string} leaderboarId
+   * @param {int} score
+   * @param {object} parameters
+   * @param {object} handlers
    */
   var submitScore = function(leaderboardId, score, parameters, handlers) {
     if (!isInitialized()) return;
@@ -911,10 +1154,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   };
 
   /**
-   * @visibility public
-   * @param string instanceId
-   * @param Object parameters - fields (string): "core,config,turn,turnHistory,outcome"
-   * @param Object handlers
+   * Get details of a challenge instance
+   * @public
+   * @param {string} instanceId
+   * @param {object} parameters - fields (string): "core,config,turn,turnHistory,outcome"
+   * @param {object} handlers
    */
   var getChallengeInstance = function(instanceId, parameters, handlers) {
     if (!isInitialized()) return;
@@ -923,10 +1167,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   };
 
   /**
-   * @visibility public
-   * @param string instanceId
-   * @param Object parameters
-   * @param Object handlers
+   * Get turn details of a challenge instance
+   * @public
+   * @param {string} instanceId
+   * @param {object} parameters
+   * @param {object} handlers
    */
   var getChallengeTurns = function(instanceId, parameters, handlers) {
     if (!isInitialized()) return;
@@ -936,11 +1181,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
   /**
    * Generic function to submit a challenge player's turn
-   * @visibilty public
-   * @param string instanceId
-   * @param Object turnBody
-   * @param Object parameters
-   * @params Object handlers
+   * @public
+   * @param {string} instanceId
+   * @param {object} turnBody
+   * @param {object} parameters
+   * @param {object} handlers
    */
   var submitChallengeTurn = function(instanceId, turnBody, parameters, handlers) {
     if (!isInitialized()) return;
@@ -968,11 +1213,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
   /**
    * Specialized function submit a challenge player's turn with a score only
-   * @visibility public
-   * @param string instanceId
-   * @param int score
-   * @param Object parameters
-   * @param Object handlers
+   * @public
+   * @param {string} instanceId
+   * @param {int} score
+   * @param {object} parameters
+   * @param {object} handlers
    */
   var submitChallengeTurnScore = function(instanceId, score, parameters, handlers) {
     var turnBody = {score:score};
@@ -985,9 +1230,9 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
   /**
    * Display web client to signin the current anonymous player
-   * @visibility private
-   * @param Object parameters
-   * @param Object options
+   * @private
+   * @param {object} parameters
+   * @param {object} options
    */
   var authorize = function(parameters, options) {
     if (!isInitialized()) return;
@@ -1013,10 +1258,10 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
   /**
    * Display a web client with the profile of a player (default, current player)
-   * @visibility public
-   * @param string playerId (default 'me')
-   * @param Object parameters
-   * @param Object options
+   * @public
+   * @param {string} playerId (default 'me')
+   * @param {object} parameters
+   * @param {object} options
    */
   var showProfile = function(playerId, parameters, options) {
     if (!isInitialized()) return;
@@ -1028,10 +1273,10 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
   /**
    * Display a web client with the list of friends of a player (default, current player)
-   * @visibility public
-   * @param string playerId (default 'me')
-   * @param Object parameters
-   * @param Object options
+   * @public
+   * @param {string} playerId (default 'me')
+   * @param {object} parameters
+   * @param {object} options
    */
   var showFriends = function(playerId) {
     if (!isInitialized()) return;
@@ -1043,10 +1288,10 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
   /**
    * Display a web client for the requested leaderboard
-   * @visibilty public
-   * @param string leaderboardId
-   * @param Object parameters
-   * @param Object options
+   * @public
+   * @param {string} leaderboardId
+   * @param {object} parameters
+   * @param {object} options
    */
   var showLeaderboard = function(leaderboardId, parameters, options) {
     if (!isInitialized() || !leaderboardId) return;
@@ -1057,10 +1302,10 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
   /**
    * Display a web client for the requested leaderboard overview
-   * @visibility public
-   * @param string leaderboardId
-   * @param Object parameters
-   * @param Object options
+   * @public
+   * @param {string} leaderboardId
+   * @param {object} parameters
+   * @param {object} options
    */
   var showLeaderboardOverview = function(leaderboardId, parameters, options) {
     if (!isInitialized() || !leaderboardId) return;
@@ -1072,10 +1317,10 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   /**
    * Display a web client with the current player's score for the requested
    * leaderboard.
-   * @visibility public
-   * @param string leaderboardId
-   * @param Object parameters - score: the last score of the player
-   * @param Object options
+   * @public
+   * @param {string} leaderboardId
+   * @param {object} parameters - score: the last score of the player
+   * @param {object} options
    */
   var showRankbox = function(leaderboardId, parameters, options) {
     if (!isInitialized() || !leaderboardId) return;
@@ -1086,11 +1331,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
   /**
    * Put a score and show the rankbox. The rankbox takes into account the score.
-   * @visibility public
-   * @param string leaderboardId
-   * @param int score
-   * @param Object parameters
-   * @param Object options
+   * @public
+   * @param {string} leaderboardId
+   * @param {int} score
+   * @param {object} parameters
+   * @param {object} options
    */
   var submitScoreAndShowRankbox = function(leaderboardId, score, parameters, options) {
     submitScore(leaderboardId, score, parameters);
@@ -1101,9 +1346,9 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
   /**
    * Display a web client with the list of challenges of the player.
-   * @visibility public
-   * @param Object parameters
-   * @param Object options
+   * @public
+   * @param {object} parameters
+   * @param {object} options
    */
   var showChallenges = function(parameters, options) {
     if (!isInitialized()) return;
@@ -1113,11 +1358,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   };
 
   /**
-   * display a web client witht the details of a challenge instance
-   * @visibility public
-   * @param string instanceIf
-   * @param Object parameters
-   * @param Object options
+   * Display a web client witht the details of a challenge instance
+   * @public
+   * @param {string} instanceId
+   * @param {object} parameters
+   * @param {object} options
    */
   var showChallengeInstance = function(instanceId, parameters, options) {
     if (!isInitialized()) return;
@@ -1130,12 +1375,14 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   initialize(clientId, clientSecret, useSandbox);
 
   /**
+   * @constructor
+   * @alias module:Scoreflex
    * public API
    */
   return {
     get:RestClient.get,
     post:RestClient.post,
-    reset:reset, // erase localStorage data
+    reset:reset, // delete localStorage session data
     // rest api
     ping:ping,
     submitScore:submitScore,
@@ -1158,6 +1405,11 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
 })(clientId, clientSecret, useSandbox);
 
+/**
+ * @constructor
+ * @alias module:Scoreflex
+ * public API
+ */
 return Scoreflex.SDK;
 
 };
