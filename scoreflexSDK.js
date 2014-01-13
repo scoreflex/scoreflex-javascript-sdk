@@ -377,7 +377,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
                  + encode(qs)
                  + '&'
                  + encode(body);
-console.log(string);
+
       var secret = getContext().clientSecret;
       var hash = CryptoJS.HmacSHA1(string, secret);
       var hashB64 = hash.toString(CryptoJS.enc.Base64);
