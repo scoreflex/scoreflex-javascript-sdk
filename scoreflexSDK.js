@@ -658,16 +658,15 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
           close(iframeId);
           setSession(null, true);
           fetchAnonymousAccessTokenIfNeeded();
-          Events.fire(Event.ScoreflexSessionEvent(false, true));
           break;
 
-        case '200001': // close
+        case '200001': // close webview
           close(iframeId);
           break;
 
         case '200002': // play leaderboard
           var leaderboardId = data.leaderboardId;
-          Events.fire(Event.ScoreflexLeaderboardEvent(Leaderboards.get(leaderboardId)));
+          Events.fire(Events.ScoreflexLeaderboardEvent(Leaderboards.get(leaderboardId)));
           close(iframeId);
           break;
 
@@ -701,7 +700,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
           var challengeInstanceId = data.challengeInstanceId;
           var challengeConfigId = data.challengeConfigId;
           close(iframeId);
-          Events.fire(Event.ScoreflexChallengeEvent(Challenges.get(challengeInstanceId, challengeConfigId)));
+          Events.fire(Events.ScoreflexChallengeEvent(Challenges.get(challengeInstanceId, challengeConfigId)));
           break;
 
         case '200008': // link with service
@@ -1413,7 +1412,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     var getDetails = function(parameters, handlers) {
       if (!isInitialized()) return;
       var params = pushParameters(params, parameters);
-      RestClient.get("/challenges/instances/"+challengeInstanceId, params, handlers);
+      RestClient.get("/challenges/instances/"+instanceId, params, handlers);
     };
 
     /**
@@ -1504,13 +1503,13 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       if (!isInitialized()) return;
       if (!turnBody || turnBody.turnSequence === undefined) {
         // request the turnSequence if we don't have it
-        getChallengeInstance(instanceId, {fields:"turn"}, {
+        getDetails({fields:"turn"}, {
           onload: function() {
             var json = this.responseJSON || {};
             var turnSequence = (json.turn || {}).sequence || 0;
             var newTurnBody = turnBody || {};
             newTurnBody.turnSequence = turnSequence;
-            submitChallengeTurn(instanceId, newTurnBody, parameters, handlers);
+            submitTurn(newTurnBody, parameters, handlers);
           },
           onerror: (handlers || {}).onerror
         });
@@ -1536,7 +1535,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
      */
     var submitTurnScore = function(score, parameters, handlers) {
       var turnBody = {score:score};
-      submitChallengeTurn(instanceId, turnBody, parameters, handlers);
+      submitTurn(turnBody, parameters, handlers);
     };
 
     /**
@@ -1605,7 +1604,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
      * @memberof module:Scoreflex.SDK.Challenges
      */
     var get = function(challengeInstanceId, challengeConfigId) {
-      return Challenge(challengeInstanceId, challengeConfigId);
+      return ChallengeInstance(challengeInstanceId, challengeConfigId);
     };
 
     return  {
@@ -1775,6 +1774,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
         }, false);
       }
       _initialized = true;
+      Events.fire(Events.ScoreflexSessionEvent(false, true));
     };
     var onError = function() {
       //console.log('error');
@@ -1832,7 +1832,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
           setSession(null, false);
         }
         Players.showProfile();
-        Events.fire(Event.ScoreflexSessionEvent(true, false));
+        Events.fire(Events.ScoreflexSessionEvent(true, false));
       };
       var onError = function() {
         //console.log('error');
