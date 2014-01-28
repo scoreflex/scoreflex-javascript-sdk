@@ -470,7 +470,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     ScoreflexPlayEvent: function(leaderboard) {
       return {
         name: "play",
-        leaderboard: Leaderboard
+        leaderboard: leaderboard
       };
     },
 
@@ -666,7 +666,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
         case '200002': // play leaderboard
           var leaderboardId = data.leaderboardId;
-          Events.fire(Events.ScoreflexLeaderboardEvent(Leaderboards.get(leaderboardId)));
+          Events.fire(Events.ScoreflexPlayEvent(Leaderboards.get(leaderboardId)));
           close(iframeId);
           break;
 
