@@ -77,7 +77,7 @@ ScoreflexSDK.WebClient.show(path);
 
 SDK documentation
 -----------------
-The SDK documentation in a JSDoc format is available in the jsdoc folder of the Scoreflex SDK.
+The SDK documentation in a JSDoc format is available in the gh-pages branch and is served at: http://scoreflex.github.io/scoreflex-javascript-sdk/.
 
 API Reference
 -------------
