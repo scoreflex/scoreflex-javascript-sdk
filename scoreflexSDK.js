@@ -1017,7 +1017,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
    * @memberof module:Scoreflex.SDK
    */
   var Storage = (function(){
-    _ns = 'SFX_' + clientId + '_' + (useSandbox ? '1' : '0');
+    var _ns = 'SFX_' + clientId + '_' + (useSandbox ? '1' : '0');
     /**
      * Get an object by key.
      * @param {string} key
