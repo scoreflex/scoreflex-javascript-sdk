@@ -180,6 +180,32 @@ Scoreflex.Helper = {
 };
 
 /**
+ * List of Session States
+ * @readonly
+ * @enum {integer}
+ * @alias module:Scoreflex.SessionState
+ * @memberof module:Scoreflex
+ */
+Scoreflex.SessionState = {
+  /**
+   * Session initialization failed
+   */
+  SESSION_INIT_FAILED: -1,
+  /**
+   * Session initialization is not started
+   */
+  SESSION_INIT_UNSTARTED: 0,
+  /**
+   * Session initialization is in progress
+   */
+  SESSION_INIT_INPROGRESS: 1,
+  /**
+   * Session initilialization is successful
+   */
+  SESSION_INIT_SUCCESS: 2
+};
+
+/**
  * Scoreflex SDK Object.
  * @param {string} clientId
  * @param {string} clientSecret
@@ -198,11 +224,6 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     "nl", "pa", "pl", "pt", "pt_PT", "pt_BR", "ro", "ru", "sk", "sl", "sq",
     "sr", "sv", "sw", "ta", "th", "tl", "tr", "uk", "vi", "zh", "zh_CN",
     "zh_TW", "zh_HK"];
-
-  var SESSION_INIT_FAILED = -1;
-  var SESSION_INIT_UNSTARTED = 0;
-  var SESSION_INIT_INPROGRESS = 1;
-  var SESSION_INIT_SUCCESS = 2;
 
   var _initialized = false;
   var _initState = 0;
@@ -1698,11 +1719,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
 
   /**
    * Get the session initialization state.
-   * @return {integer}
-   * 0: not initialized<br />
-   * -1: init failed<br />
-   * 1: init in progress<br />
-   * 2: init successful<br />
+   * @return {module:Scoreflex.SessionState}
    *
    * @public
    * @memberof module:Scoreflex.SDK
@@ -1915,13 +1932,13 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       _context.clientSecret = clientSecret;
       _context.useSandbox = useSandbox;
 
-      setSessionState(SESSION_INIT_INPROGRESS);
+      setSessionState(Scoreflex.SessionState.SESSION_INIT_INPROGRESS);
       var onload = function() {
         _initialized = true;
-        setSessionState(SESSION_INIT_SUCCESS);
+        setSessionState(Scoreflex.SessionState.SESSION_INIT_SUCCESS);
       };
       var onerror = function() {
-        setSessionState(SESSION_INIT_FAILED);
+        setSessionState(Scoreflex.SessionState.SESSION_INIT_FAILED);
       };
       fetchAnonymousAccessTokenIfNeeded(onload, onerror);
     }
@@ -1975,7 +1992,9 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     // objects
     Leaderboards: Leaderboards,
     Players: Players,
-    Challenges: Challenges
+    Challenges: Challenges,
+    // ENUMS
+    SessionState:Scoreflex.SessionState
   };
 
 })(clientId, clientSecret, useSandbox);
