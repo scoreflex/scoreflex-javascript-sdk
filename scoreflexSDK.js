@@ -419,6 +419,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   //-- Handlers
   /**
    * Scoreflex object to handle RestClient request responses
+   * @callback module:Scoreflex.SDK.Handlers
    * @param {object} callbacks
    * Callback functions are called in the scope (this keyword) of the
    * XMLHttpRequest object when available or the window object otherwise.
@@ -428,14 +429,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
    * <br />- onabort (Function)
    * <br />- onloadend (Function)
    * @see See also {@link http://www.w3.org/TR/XMLHttpRequest2/#events|XMLHttpRequest2}
-
-   * @public
-   * @class Handlers
-   * @memberof module:Scoreflex.SDK
    */
-  var Handlers = function(callbacks){
-    return callbacks;
-  };
   //-- Handlers end
 
 
