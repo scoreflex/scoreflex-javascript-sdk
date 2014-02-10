@@ -199,7 +199,14 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     "sr", "sv", "sw", "ta", "th", "tl", "tr", "uk", "vi", "zh", "zh_CN",
     "zh_TW", "zh_HK"];
 
+  var SESSION_INIT_FAILED = -1;
+  var SESSION_INIT_UNSTARTED = 0;
+  var SESSION_INIT_INPROGRESS = 1;
+  var SESSION_INIT_SUCCESS = 2;
+
   var _initialized = false;
+  var _initState = 0;
+
   var _context = {
     clientId:null,
     clientSecret:null,
@@ -441,19 +448,32 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
    */
   var Events = {
     /**
-     * ScoreflexEvent with name: "session"
-     * @param {boolean} login - true on login event
-     * @param {boolean} logout - true on logout event
+     * ScoreflexEvent with name "session". Indicate SDK initialization state
      * @return {ScoreflexEvent}
+     * @see {@link module:Scoreflex.SDK.getSessionState}
      *
      * @event ScoreflexSessionEvent
      * @memberof module:Scoreflex.SDK.Events
      */
-    ScoreflexSessionEvent: function(login, logout) {
+    ScoreflexSessionEvent: function() {
       return {
         name: "session",
-        login: login,
-        logout: logout
+        state: getSessionState()
+      };
+    },
+
+    /**
+     * ScoreflexEvent with name "player". Indicate the current player has been set or reset.
+     * @return {ScoreflexEvent}
+     * @see {@link module:Scoreflex.SDK.Players.getCurrent}
+     *
+     * @event ScoreflexPlayerEvent
+     * @memberof module:Scoreflex.SDK.Events
+     */
+    ScoreflexPlayerEvent: function(anonymous) {
+      return {
+        name: "player",
+        player:(getSession() || {}).me
       };
     },
 
@@ -1682,6 +1702,33 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     return _initialized;
   };
 
+  /**
+   * Get the session initialization state.
+   * @return {integer}
+   * 0: not initialized<br />
+   * -1: init failed<br />
+   * 1: init in progress<br />
+   * 2: init successful<br />
+   *
+   * @public
+   * @memberof module:Scoreflex.SDK
+   */
+  var getSessionState = function() {
+    return _initState;
+  };
+
+  /**
+   * Set the session initialization state and send a Session event
+   *
+   * @private
+   * @memberof module:Scoreflex.SDK
+   */
+  var setSessionState = function(state) {
+    _initState = state;
+    Events.fire(Events.ScoreflexSessionEvent());
+  };
+
+
   var _oauthState = null;
   /**
    * Get or generate the oauth state parameter.
@@ -1750,7 +1797,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
    * @private
    * @memberof module:Scoreflex.SDK
    */
-  var fetchAnonymousAccessTokenIfNeeded = function() {
+  var fetchAnonymousAccessTokenIfNeeded = function(onload, onerror) {
     var session = getSession();
 
     var onLoad = function() {
@@ -1771,11 +1818,13 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
           me:me
         }, false);
       }
-      _initialized = true;
-      Events.fire(Events.ScoreflexSessionEvent(false, true));
+
+      Events.fire(Events.ScoreflexPlayerEvent());
+
+      if (onload) onload();
     };
     var onError = function() {
-      //console.log('error');
+      if (onerror) onerror();
     };
     var handlers = {
       onload: onLoad,
@@ -1830,7 +1879,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
           setSession(null, false);
         }
         Players.showProfile();
-        Events.fire(Events.ScoreflexSessionEvent(true, false));
+        Events.fire(Events.ScoreflexPlayerEvent());
       };
       var onError = function() {
         //console.log('error');
@@ -1872,7 +1921,15 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       _context.clientSecret = clientSecret;
       _context.useSandbox = useSandbox;
 
-      fetchAnonymousAccessTokenIfNeeded();
+      setSessionState(SESSION_INIT_INPROGRESS);
+      var onload = function() {
+        _initialized = true;
+        setSessionState(SESSION_INIT_SUCCESS);
+      };
+      var onerror = function() {
+        setSessionState(SESSION_INIT_FAILED);
+      };
+      fetchAnonymousAccessTokenIfNeeded(onload, onerror);
     }
   };
 
@@ -1915,6 +1972,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
   return {
     // misc
     reset:reset, // delete localStorage session data
+    getSessionState:getSessionState,
     // rest api
     RestClient: RestClient,
     ping:ping,
