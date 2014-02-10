@@ -41,6 +41,7 @@
  * @public
  **/
 var Scoreflex = function(clientId, clientSecret, useSandbox) {
+"use strict";
 
 var Scoreflex = {};
 
