@@ -172,9 +172,7 @@ Scoreflex.Helper = {
     }
     else
     {
-      evt = document.createEvent("HTMLEvents");
-      evt.initEvent(eventType, true, true); // event type,bubbling,cancelable
-      evt.data = data;
+      evt = new CustomEvent(eventType, {detail:data, bubbles:true, cancelable:true});
       return !element.dispatchEvent(evt);
     }
   }
