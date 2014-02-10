@@ -427,7 +427,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
    * @memberof module:Scoreflex.SDK
    */
   var Handlers = function(callbacks){
-    return handlers;
+    return callbacks;
   };
   //-- Handlers end
 
