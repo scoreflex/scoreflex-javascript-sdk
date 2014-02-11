@@ -43,7 +43,7 @@
 var Scoreflex = function(clientId, clientSecret, useSandbox) {
 "use strict";
 
-var Scoreflex = {};
+var SFX = {};
 
 /**
  * Helper methods. Private to Scoreflex namespace.
@@ -51,7 +51,7 @@ var Scoreflex = {};
  * @namespace Scoreflex.Helper
  * @memberof module:Scoreflex
  */
-Scoreflex.Helper = {
+SFX.Helper = {
   /**
    * Test an element belongs to an Array.
    * @private
@@ -181,32 +181,6 @@ Scoreflex.Helper = {
 };
 
 /**
- * List of Session States
- * @readonly
- * @enum {integer}
- * @alias module:Scoreflex.SessionState
- * @memberof module:Scoreflex
- */
-Scoreflex.SessionState = {
-  /**
-   * Session initialization failed
-   */
-  SESSION_INIT_FAILED: -1,
-  /**
-   * Session initialization is not started
-   */
-  SESSION_INIT_UNSTARTED: 0,
-  /**
-   * Session initialization is in progress
-   */
-  SESSION_INIT_INPROGRESS: 1,
-  /**
-   * Session initilialization is successful
-   */
-  SESSION_INIT_SUCCESS: 2
-};
-
-/**
  * Scoreflex SDK Object.
  * @param {string} clientId
  * @param {string} clientSecret
@@ -216,7 +190,7 @@ Scoreflex.SessionState = {
  * @namespace SDK
  * @memberof module:Scoreflex
  */
-Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
+SFX.SDK = (function(clientId, clientSecret, useSandbox) {
   var DEFAULT_LANGUAGE_CODE = "en";
   var VALID_LANGUAGE_CODES = ["af", "ar", "be",
     "bg", "bn", "ca", "cs", "da", "de", "el", "en", "en_GB", "en_US", "es",
@@ -381,7 +355,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
         }
       }
 
-      var encode = Scoreflex.Helper.rawurlencode;
+      var encode = SFX.Helper.rawurlencode;
 
       // additionnal params (to encode)
       for (var k in params) {
@@ -556,7 +530,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
      * @memberof module:Scoreflex.SDK.Events
      */
     fire: function(eventData) {
-      Scoreflex.Helper.fireEvent(window, 'ScoreflexEvent', eventData);
+      SFX.Helper.fireEvent(window, 'ScoreflexEvent', eventData);
     }
   };
   //-- Events end
@@ -603,7 +577,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       if (params === undefined) params = {};
       var session = getSession() || {};
       var lang = session.lang || window.navigator.language;
-      params.lang = Scoreflex.Helper.inArray(lang, VALID_LANGUAGE_CODES) ? lang : 'en';
+      params.lang = SFX.Helper.inArray(lang, VALID_LANGUAGE_CODES) ? lang : 'en';
       if (session.accessToken) {
         params.accessToken = session.accessToken;
       }
@@ -918,7 +892,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       if (options === undefined) options = {};
       var session = getSession() || {};
       var lang = session.lang || window.navigator.language;
-      params.lang = Scoreflex.Helper.inArray(lang, VALID_LANGUAGE_CODES) ? lang : 'en';
+      params.lang = SFX.Helper.inArray(lang, VALID_LANGUAGE_CODES) ? lang : 'en';
       if (session.sid && !options.noSid) {
         params.sid = session.sid;
       }
@@ -1822,7 +1796,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
       clientId: context.clientId,
       devicePlatform: 'Web',
       deviceModel: window.navigator.userAgent || 'browser',
-      deviceId:Scoreflex.Helper.getDeviceId()
+      deviceId:SFX.Helper.getDeviceId()
     };
     var body = undefined;
     RestClient.post("/oauth/anonymousAccessToken", params, body, handlers);
@@ -1991,7 +1965,7 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
         clientId: context.clientId,
         devicePlatform: 'Web',
         deviceModel: window.navigator.userAgent || 'browser',
-        deviceId:Scoreflex.Helper.getDeviceId(),
+        deviceId:SFX.Helper.getDeviceId(),
         state: getOauthState(true)
       };
       if (session.accessToken) {
@@ -2018,13 +1992,38 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     // objects
     Leaderboards: Leaderboards,
     Players: Players,
-    Challenges: Challenges,
-    // ENUMS
-    SessionState:Scoreflex.SessionState
+    Challenges: Challenges
   };
 
 })(clientId, clientSecret, useSandbox);
 
-return Scoreflex.SDK;
+return SFX.SDK;
 
+};
+
+
+/**
+ * List of Session States
+ * @readonly
+ * @enum {integer}
+ * @alias module:Scoreflex.SessionState
+ * @memberof module:Scoreflex
+ */
+Scoreflex.SessionState = {
+  /**
+   * Session initialization failed
+   */
+  SESSION_INIT_FAILED: -1,
+  /**
+   * Session initialization is not started
+   */
+  SESSION_INIT_UNSTARTED: 0,
+  /**
+   * Session initialization is in progress
+   */
+  SESSION_INIT_INPROGRESS: 1,
+  /**
+   * Session initilialization is successful
+   */
+  SESSION_INIT_SUCCESS: 2
 };
