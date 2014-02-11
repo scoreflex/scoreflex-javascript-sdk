@@ -464,14 +464,19 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
    */
   var Events = {
     /**
-     * ScoreflexEvent with name "session". Indicate SDK initialization state
      * @return {ScoreflexEvent}
-     * @see {@link module:Scoreflex.SDK.getSessionState}
-     *
-     * @event ScoreflexSessionEvent
-     * @memberof module:Scoreflex.SDK.Events
+     * @private
      */
     ScoreflexSessionEvent: function() {
+      /**
+       * ScoreflexEvent to indicate SDK initialization state.
+       * @property {string} name "session"
+       * @property {module:Scoreflex.SessionState} state The sesssion initialization state
+       *
+       * @event ScoreflexSessionEvent
+       * @memberof module:Scoreflex.SDK.Events
+       * @see {@link module:Scoreflex.SDK.getSessionState}
+       */
       return {
         name: "session",
         state: getSessionState()
@@ -479,29 +484,43 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     },
 
     /**
-     * ScoreflexEvent with name "player". Indicate the current player has been set or reset.
      * @return {ScoreflexEvent}
-     * @see {@link module:Scoreflex.SDK.Players.getCurrent}
-     *
-     * @event ScoreflexPlayerEvent
-     * @memberof module:Scoreflex.SDK.Events
+     * @private
      */
-    ScoreflexPlayerEvent: function(anonymous) {
+    ScoreflexPlayerEvent: function() {
+      var s = getSession() || {};
+      /**
+       * ScoreflexEvent to indicate the current player has been set or reset.
+       * @property {string} name "player"
+       * @property {module:Scoreflex.SDK.Player} player The current player
+       * @property {boolean} anonymous "true" if the player is anonymous, "false" otherwise.
+       *
+       * @event ScoreflexPlayerEvent
+       * @memberof module:Scoreflex.SDK.Events
+       * @see {@link module:Scoreflex.SDK.Players.getCurrent}
+       */
       return {
         name: "player",
-        player:(getSession() || {}).me
+        player:s.me,
+        anonymous:s.anonymous
       };
     },
 
     /**
-     * ScoreflexEvent with name: "play"
      * @param {module:Scoreflex.SDK.Leaderboard} leaderboard - Leaderboard instance
      * @return {ScoreflexEvent}
-     *
-     * @event ScoreflexPlayEvent
-     * @memberof module:Scoreflex.SDK.Events
+     * @private
      */
     ScoreflexPlayEvent: function(leaderboard) {
+      /**
+       * ScoreflexEvent to indicate the player wants to play a leaderboard.
+       * The game associated to the leaderboard should be started.
+       * @property {string} name "play"
+       * @property {module:Scoreflex.SDK.Leaderboard} leaderboard The Leaderboard object
+       *
+       * @event ScoreflexPlayEvent
+       * @memberof module:Scoreflex.SDK.Events
+       */
       return {
         name: "play",
         leaderboard: leaderboard
@@ -509,14 +528,20 @@ Scoreflex.SDK = (function(clientId, clientSecret, useSandbox) {
     },
 
     /**
-     * ScoreflexEvent with name: "challenge"
      * @param {module:Scoreflex.SDK.ChallengeInstance} challenge - ChallengeIntance instance
      * @return {ScoreflexEvent}
-     *
-     * @event ScoreflexChallengeEvent
-     * @memberof module:Scoreflex.SDK.Events
+     * @private
      */
     ScoreflexChallengeEvent: function(challenge) {
+      /**
+       * ScoreflexEvent to indicate the player wants to play a challenge.
+       * The game associated with the challenge should be started.
+       * @property {string} name "challenge"
+       * @property {module:Scoreflex.SDK.ChallengeInstance} challenge The Challenge object
+       *
+       * @event ScoreflexChallengeEvent
+       * @memberof module:Scoreflex.SDK.Events
+       */
       return {
         name: "challenge",
         challenge: challenge
