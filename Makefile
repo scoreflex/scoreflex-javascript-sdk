@@ -23,6 +23,7 @@ all: doc
 #	yui-compressor --type css --line-break 500 -o style/style-min.css style.css
         
 doc:
+	mkdir -p "$(JSDOC_OUT_DIR)"
 	jsdoc -t $(DOC_TEMPLATE) -c $(DOC_CONF) -d $(JSDOC_OUT_DIR) -u $(JSDOC_TUTO_DIR) $(ROOTDIR)/scoreflex.js $(JSDOC_DIR)/index.md
 
 instdeps:
