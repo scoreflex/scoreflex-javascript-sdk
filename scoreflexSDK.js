@@ -201,7 +201,7 @@ SFX.SDK = (function(clientId, clientSecret, useSandbox) {
     "zh_TW", "zh_HK"];
 
   var _initialized = false;
-  var _initState = 0;
+  var _initState = Scoreflex.SessionState.INIT_UNSTARTED;
 
   var _context = {
     clientId:null,
@@ -1932,13 +1932,13 @@ SFX.SDK = (function(clientId, clientSecret, useSandbox) {
       _context.clientSecret = clientSecret;
       _context.useSandbox = useSandbox;
 
-      setSessionState(Scoreflex.SessionState.SESSION_INIT_INPROGRESS);
+      setSessionState(Scoreflex.SessionState.INIT_INPROGRESS);
       var onload = function() {
         _initialized = true;
-        setSessionState(Scoreflex.SessionState.SESSION_INIT_SUCCESS);
+        setSessionState(Scoreflex.SessionState.INIT_SUCCESS);
       };
       var onerror = function() {
-        setSessionState(Scoreflex.SessionState.SESSION_INIT_FAILED);
+        setSessionState(Scoreflex.SessionState.INIT_FAILED);
       };
       fetchAnonymousAccessTokenIfNeeded(onload, onerror);
     }
@@ -2013,17 +2013,17 @@ Scoreflex.SessionState = {
   /**
    * Session initialization failed
    */
-  SESSION_INIT_FAILED: -1,
+  INIT_FAILED: -1,
   /**
    * Session initialization is not started
    */
-  SESSION_INIT_UNSTARTED: 0,
+  INIT_UNSTARTED: 0,
   /**
    * Session initialization is in progress
    */
-  SESSION_INIT_INPROGRESS: 1,
+  INIT_INPROGRESS: 1,
   /**
    * Session initilialization is successful
    */
-  SESSION_INIT_SUCCESS: 2
+  INIT_SUCCESS: 2
 };
