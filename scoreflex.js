@@ -1896,7 +1896,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
           //console.log('error');
         };
 
-        handlers = {
+        var handlers = {
           onload: onLoad,
           onerror: onError
         };
