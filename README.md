@@ -9,7 +9,7 @@ Getting Started
 3. Import the SDK and the webclient style if you intend to use it in your JavaScript game.
 
     ```html
-    <script type="text/javascript" src="scoreflexSDK-full-min.js"></script>
+    <script type="text/javascript" src="scoreflex.js"></script>
     <link href="style/styles.css" type="text/css" rel="stylesheet">
     ```
 
