@@ -1475,6 +1475,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
               var count = 0;
               var received = 0;
               var id;
+              // prebuild Player objects without data
               for (id in participants) {
                 count++;
                 players[id] = Player(id, {});
@@ -1482,6 +1483,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
               var incrementalHandler = function(pjson) {
                 received++;
                 if (pjson.id) {
+                  // update Player object with data
                   players[pjson.id] = Player(pjson.id, pjson);
                 }
                 if (received >= count) {
