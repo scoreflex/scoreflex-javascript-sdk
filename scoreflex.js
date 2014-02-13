@@ -1137,6 +1137,41 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       };
 
       /**
+       * Return the avatar url of the player
+       * @return {string} url
+       *
+       * @public
+       * @instance
+       * @memberof module:Scoreflex.SDK.Player
+       */
+      var getAvatarUrl = function() {
+        var url = getValue("avatarUrl");
+        if (url) {
+          return url;
+        }
+        return "https://www.scoreflex.com/"
+                + (getContext().useSandbox ? 'sandbox/' : '')
+                + "avatars/players/"+ getId() +"/";
+      };
+
+      /**
+       * Return the location Object for the player, or a field value
+       * @param {string} [key] - facultative field key (id, adminLevel, countryCode, formatted or title)
+       * @return {Object|string}
+       *
+       * @public
+       * @instance
+       * @memberof module:Scoreflex.SDK.Player
+       */
+      var getGeo = function(key) {
+        var geo = getValue("geo") || {};
+        if (key !== undefined) {
+          return geo[key] || "";
+        }
+        return geo;
+      };
+
+      /**
        * Display a web client with the profile of the player.
        * @param {object} parameters - key/value pair of query string parameters
        * @param {object} options - key/value pair of WebClient options
@@ -1168,6 +1203,8 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         setData:setData,
         getValue:getValue,
         getNickname:getNickname,
+        getAvatarUrl:getAvatarUrl,
+        getGeo:getGeo,
         showProfile:showProfile,
         showFriends:showFriends
       };
