@@ -1101,6 +1101,30 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       };
 
       /**
+       * Set the player raw data.
+       *
+       * @public
+       * @instance
+       * @memberof module:Scoreflex.SDK.Player
+       */
+      var setData = function(newData) {
+        data = newData;
+      };
+
+      /**
+       * Get a player's data key
+       * @return {mixed}
+       *
+       * @public
+       * @instance
+       * @memberof module:Scoreflex.SDK.Player
+       */
+      var getValue = function(key) {
+        var d = getData();
+        return d[key];
+      };
+
+      /**
        * Return the player's nickname.
        * @return {string} nickname
        *
@@ -1109,7 +1133,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Player
        */
       var getNickname = function() {
-        return getData().nickName || '';
+        return getValue("nickName") || '';
       };
 
       /**
@@ -1141,6 +1165,8 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       return {
         getId:getId,
         getData:getData,
+        setData:setData,
+        getValue:getValue,
         getNickname:getNickname,
         showProfile:showProfile,
         showFriends:showFriends
