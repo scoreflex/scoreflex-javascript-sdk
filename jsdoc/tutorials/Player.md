@@ -44,6 +44,5 @@ var scoreflexEventHandler = function(event) {
 window.addEventListener("ScoreflexEvent", scoreflexEventHandler, false);
 ````
 
-Other ways to get `Player` objects is to call the `getPlayers()` method from a
-`ChallengeInstance` object or to instantiate `Player` object from playerIds 
-for instance. 
+An other way to get `Player` objects is to call the `getPlayers()` method from a
+`ChallengeInstance` for instance.
