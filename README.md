@@ -1,4 +1,4 @@
-scoreflex-javascript-sdk
+Scoreflex Javascript SDK
 ========================
 
 Getting Started
