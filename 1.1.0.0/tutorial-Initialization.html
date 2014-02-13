@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Scoreflex Javascript SDK tutorialInitialization</title>
+
+	<!--[if lt IE 9]>
+	<script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+	<link type="text/css" rel="stylesheet" href="styles/sunlight.default.css">
+
+	
+	<link type="text/css" rel="stylesheet" href="styles/site.cerulean.css">
+	
+</head>
+
+<body>
+<div class="container-fluid">
+	<div class="navbar navbar-fixed-top ">
+		<div class="navbar-inner">
+			<a class="brand" href="index.html">Scoreflex Javascript SDK</a>
+			<ul class="nav">
+				
+				<li class="dropdown">
+					<a href="namespaces.list.html" class="dropdown-toggle" data-toggle="dropdown">Namespaces<b
+						class="caret"></b></a>
+
+					<ul class="dropdown-menu ">
+						
+						<li>
+							<a href="module-Scoreflex.SDK.html">SDK</a>
+						</li>
+						
+						<li>
+							<a href="module-Scoreflex.SDK.Challenges.html">Challenges</a>
+						</li>
+						
+						<li>
+							<a href="module-Scoreflex.SDK.Events.html">Events</a>
+						</li>
+						
+						<li>
+							<a href="module-Scoreflex.SDK.Leaderboards.html">Leaderboards</a>
+						</li>
+						
+						<li>
+							<a href="module-Scoreflex.SDK.Players.html">Players</a>
+						</li>
+						
+						<li>
+							<a href="module-Scoreflex.SDK.RestClient.html">RestClient</a>
+						</li>
+						
+						<li>
+							<a href="module-Scoreflex.SDK.WebClient.html">WebClient</a>
+						</li>
+						
+
+					</ul>
+				</li>
+				
+				<li class="dropdown">
+					<a href="modules.list.html" class="dropdown-toggle" data-toggle="dropdown">Modules<b
+						class="caret"></b></a>
+
+					<ul class="dropdown-menu ">
+						
+						<li>
+							<a href="module-Scoreflex.html">Scoreflex</a>
+						</li>
+						
+
+					</ul>
+				</li>
+				
+				<li class="dropdown">
+					<a href="classes.list.html" class="dropdown-toggle" data-toggle="dropdown">Classes<b
+						class="caret"></b></a>
+
+					<ul class="dropdown-menu ">
+						
+						<li>
+							<a href="module-Scoreflex.SDK.ChallengeInstance.html">ChallengeInstance</a>
+						</li>
+						
+						<li>
+							<a href="module-Scoreflex.SDK.Leaderboard.html">Leaderboard</a>
+						</li>
+						
+						<li>
+							<a href="module-Scoreflex.SDK.Player.html">Player</a>
+						</li>
+						
+
+					</ul>
+				</li>
+				
+				<li class="dropdown">
+					<a href="events.list.html" class="dropdown-toggle" data-toggle="dropdown">Events<b
+						class="caret"></b></a>
+
+					<ul class="dropdown-menu ">
+						
+						<li>
+							<a href="module-Scoreflex.SDK.Events.html#event:ScoreflexChallengeEvent">ScoreflexChallengeEvent</a>
+						</li>
+						
+						<li>
+							<a href="module-Scoreflex.SDK.Events.html#event:ScoreflexPlayerEvent">ScoreflexPlayerEvent</a>
+						</li>
+						
+						<li>
+							<a href="module-Scoreflex.SDK.Events.html#event:ScoreflexPlayEvent">ScoreflexPlayEvent</a>
+						</li>
+						
+						<li>
+							<a href="module-Scoreflex.SDK.Events.html#event:ScoreflexSessionEvent">ScoreflexSessionEvent</a>
+						</li>
+						
+
+					</ul>
+				</li>
+				
+				<li class="dropdown">
+					<a href="tutorials.list.html" class="dropdown-toggle" data-toggle="dropdown">Tutorials<b
+						class="caret"></b></a>
+
+					<ul class="dropdown-menu ">
+						
+						<li>
+							<a href="tutorial-Challenge.html">Challenge</a>
+						</li>
+						
+						<li>
+							<a href="tutorial-Events.html">Events</a>
+						</li>
+						
+						<li>
+							<a href="tutorial-Handlers.html">Handlers</a>
+						</li>
+						
+						<li>
+							<a href="tutorial-Initialization.html">Initialization</a>
+						</li>
+						
+						<li>
+							<a href="tutorial-Leaderboard.html">Leaderboard</a>
+						</li>
+						
+						<li>
+							<a href="tutorial-Player.html">Player</a>
+						</li>
+						
+
+					</ul>
+				</li>
+				
+			</ul>
+		</div>
+	</div>
+
+	<div class="row-fluid">
+
+		
+			<div class="span12">
+				
+				<div id="main">
+					<section>
+    
+<header>
+    
+
+    <h2>Initialization</h2>
+</header>  
+
+<article>
+    <h3 id="import-the-sdk-and-dependencies">Import the SDK and dependencies</h3>
+<p>CryptoJS librairies are useful to compute the Scoreflex signature for HTTP POST
+requests.</p>
+<p>Json2 file provides JSON <code>parse</code> and <code>stringify</code> functions for browser not
+supporting them. You don't need to include this librairy if your game intend
+to be played in recent browsers already having this support. </p>
+<p>Scripts to include:</p>
+<ul>
+<li>libs/CryptoJS/rollups/hmac-sha1.js</li>
+<li>libs/CryptoJS/components/enc-base64-min.js</li>
+<li>libs/Json/json2.js</li>
+<li>scoreflex.js</li>
+</ul>
+<p>Import the webclient style if you intend to use Scoreflex web views in your game.</p>
+<ul>
+<li>style/styles.css</li>
+</ul>
+<p>Start using the Scoreflex JavaScript SDK. Your clientId and clientSecret are
+indicated on the game page of your Scoreflex developer account.</p>
+<pre><code class="lang-javascript">var useSandbox = true;
+var ScoreflexSDK = Scoreflex(/*clientId*/, /*clientSecret*/, useSandbox);</code></pre>
+<h3 id="tips">Tips</h3>
+<h4 id="use-a-private-scope">Use a private scope</h4>
+<p>It is advised to instanciate the Scoreflex SDK in a non-global scope to avoid
+anyone to access the API without your consent (ie, cheat).</p>
+<pre><code class="lang-javascript">/* -- public scope -- */
+var myGame = (function() {
+  /* -- inner private scope using a closure -- */
+
+  var useSandbox = true;
+  var ScoreflexSDK = Scoreflex(/*clientId*/, /*clientSecret*/, useSandbox);
+})();</code></pre>
+<h4 id="hide-your-credentials">Hide your credentials</h4>
+<p>Your clientId and clientSecret should not be in plain sight. You may want to
+encode or encrypt them to keep them a secret.</p>
+</article>
+
+</section>  
+
+				</div>
+
+				<div class="clearfix"></div>
+				<footer>
+					
+					
+		<span class="jsdoc-message">
+		Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.0-dev</a>
+		on Thu Feb 13 2014 12:20:44 GMT+0100 (CET) using the <a href="https://github.com/terryweiss/docstrap">DocStrap template</a>.
+		</span>
+				</footer>
+			</div>
+
+			
+			<br clear="both">
+		</div>
+
+	</div>
+	<script src="scripts/sunlight.js"></script>
+	<script src="scripts/sunlight.javascript.js"></script>
+	<script src="scripts/sunlight-plugin.doclinks.js"></script>
+	<script src="scripts/sunlight-plugin.linenumbers.js"></script>
+	<script src="scripts/sunlight-plugin.menu.js"></script>
+	<script src="scripts/jquery.min.js"></script>
+	<script src="scripts/jquery.scrollTo.js"></script>
+	<script src="scripts/jquery.localScroll.js"></script>
+	<script src="scripts/bootstrap-dropdown.js"></script>
+	<script src="scripts/toc.js"></script>
+
+
+	<script>  Sunlight.highlightAll({lineNumbers:true,  showMenu: true, enableDoclinks :true}); </script>
+
+	<script>
+		$( function () {
+			$( "#toc" ).toc( {
+			    anchorName  : function(i, heading, prefix) {
+					return $(heading).attr("id") || ( prefix + i );
+				},
+				selectors   : "h1,h2,h3,h4",
+				showAndHide : false,
+				scrollTo    : 60
+			} );
+			$( "#toc>ul" ).addClass( "nav nav-pills nav-stacked" );
+			$( "#main span[id^='toc']" ).addClass( "toc-shim" );
+
+		} );
+	</script>
+
+	
+
+</body>
+</html>
