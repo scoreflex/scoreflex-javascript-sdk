@@ -1,4 +1,4 @@
-### Import the SDK and dependancies ###
+### Import the SDK and dependencies ###
 
 CryptoJS librairies are useful to compute the Scoreflex signature for HTTP POST
 requests.
