@@ -1262,7 +1262,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
             var json = this.responseJSON || {};
             cache[playerId] = json;
             var p = Player(playerId, json);
-            i_onload.call(this, p);
+            if (i_onload) i_onload.call(this, p);
           };
 
           RestClient.get("/players/"+playerId, parameters, handlers);
