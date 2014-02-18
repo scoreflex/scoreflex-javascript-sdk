@@ -475,7 +475,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
          */
         return {
           name: "player",
-          player:s.me,
+          player:new Player(s.me.id, s.me),
           anonymous:s.anonymous
         };
       },
@@ -1075,16 +1075,16 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @class Player
      * @memberof module:Scoreflex.SDK
      */
-    var Player = function(playerId, data) {
+    function Player(playerId, data) {
+
       /**
        * Return the player's identifier (playerId).
        * @return {string} Player ID
        *
        * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Player
+       * @function module:Scoreflex.SDK.Player#getId
        */
-      var getId = function() {
+      this.getId = function() {
         return playerId;
       };
 
@@ -1093,121 +1093,101 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @return {object}
        *
        * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Player
+       * @function module:Scoreflex.SDK.Player#getData
        */
-      var getData = function() {
-        return data || {};
+      this.getData = function() {
+        return data;
       };
 
       /**
        * Set the player raw data.
        *
        * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Player
+       * @function module:Scoreflex.SDK.Player#setData
        */
-      var setData = function(newData) {
+      this.setData = function(newData) {
         data = newData;
       };
+    };
 
-      /**
-       * Get a player's data key
-       * @return {mixed}
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Player
-       */
-      var getValue = function(key) {
-        var d = getData();
-        return d[key];
-      };
+    /**
+     * Get a player's data key
+     * @return {mixed}
+     *
+     * @public
+     * @function module:Scoreflex.SDK.Player#getValue
+     */
+    Player.prototype.getValue = function(key) {
+      var d = this.getData();
+      return d[key];
+    };
 
-      /**
-       * Return the player's nickname.
-       * @return {string} nickname
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Player
-       */
-      var getNickname = function() {
-        return getValue("nickName") || '';
-      };
+    /**
+     * Return the player's nickname.
+     * @return {string} nickname
+     *
+     * @public
+     * @function module:Scoreflex.SDK.Player#getNickname
+     */
+    Player.prototype.getNickname = function() {
+      return this.getValue("nickName") || '';
+    };
 
-      /**
-       * Return the avatar url of the player
-       * @return {string} url
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Player
-       */
-      var getAvatarUrl = function() {
-        var url = getValue("avatarUrl");
-        if (url) {
-          return url;
-        }
-        return "https://www.scoreflex.com/"
-                + (getContext().useSandbox ? 'sandbox/' : '')
-                + "avatars/players/"+ getId() +"/";
-      };
+    /**
+     * Return the avatar url of the player
+     * @return {string} url
+     *
+     * @public
+     * @function module:Scoreflex.SDK.Player#getAvatarUrl
+     */
+    Player.prototype.getAvatarUrl = function() {
+      var url = this.getValue("avatarUrl");
+      if (url) {
+        return url;
+      }
+      return "https://www.scoreflex.com/"
+              + (getContext().useSandbox ? 'sandbox/' : '')
+              + "avatars/players/"+ this.getId() +"/";
+    };
 
-      /**
-       * Return the location Object for the player, or a field value
-       * @param {string} [key] - facultative field key (id, adminLevel, countryCode, formatted or title)
-       * @return {Object|string}
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Player
-       */
-      var getGeo = function(key) {
-        var geo = getValue("geo") || {};
-        if (key !== undefined) {
-          return geo[key] || "";
-        }
-        return geo;
-      };
+    /**
+     * Return the location Object for the player, or a field value
+     * @param {string} [key] - facultative field key (id, adminLevel, countryCode, formatted or title)
+     * @return {Object|string}
+     *
+     * @public
+     * @function module:Scoreflex.SDK.Player#getGeo
+     */
+    Player.prototype.getGeo = function(key) {
+      var geo = this.getValue("geo") || {};
+      if (key !== undefined) {
+        return geo[key] || "";
+      }
+      return geo;
+    };
 
-      /**
-       * Display a web client with the profile of the player.
-       * @param {object} parameters - key/value pair of query string parameters
-       * @param {object} options - key/value pair of WebClient options
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Player
-       */
-      var showProfile = function(parameters, options) {
-        Players.showProfile(playerId, parameters, options);
-      };
+    /**
+     * Display a web client with the profile of the player.
+     * @param {object} parameters - key/value pair of query string parameters
+     * @param {object} options - key/value pair of WebClient options
+     *
+     * @public
+     * @function module:Scoreflex.SDK.Player#showProfile
+     */
+    Player.prototype.showProfile = function(parameters, options) {
+      Players.showProfile(this.getId(), parameters, options);
+    };
 
-      /**
-       * Display a web client with the list of friends of the player.
-       * @param {object} parameters - key/value pair of query string parameters
-       * @param {object} options - key/value pair of WebClient options
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Player
-       */
-      var showFriends = function(parameters, options) {
-        showPlayerFriends(playerId, parameters, options);
-      };
-
-      return {
-        getId:getId,
-        getData:getData,
-        setData:setData,
-        getValue:getValue,
-        getNickname:getNickname,
-        getAvatarUrl:getAvatarUrl,
-        getGeo:getGeo,
-        showProfile:showProfile,
-        showFriends:showFriends
-      };
+    /**
+     * Display a web client with the list of friends of the player.
+     * @param {object} parameters - key/value pair of query string parameters
+     * @param {object} options - key/value pair of WebClient options
+     *
+     * @public
+     * @function module:Scoreflex.SDK.Player#showFriends
+     */
+    Player.prototype.showFriends = function(parameters, options) {
+      showPlayerFriends(this.getId(), parameters, options);
     };
     //-- Player object end
 
@@ -1232,7 +1212,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       var getCurrent = function() {
         var data = (getSession() || {}).me || {};
         var playerId = data.id;
-        return Player(playerId, data);
+        return new Player(playerId, data);
       };
 
       /**
@@ -1252,7 +1232,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
 
         if (!noCache && cache[playerId]) {
           if (handlers.onload) {
-            var p = Player(playerId, cache[playerId]);
+            var p = new Player(playerId, cache[playerId]);
             setTimeout(function(){handlers.onload.call(null, p);}, 0);
           }
         }
@@ -1261,7 +1241,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
           handlers.onload = function() {
             var json = this.responseJSON || {};
             cache[playerId] = json;
-            var p = Player(playerId, json);
+            var p = new Player(playerId, json);
             if (i_onload) i_onload.call(this, p);
           };
 
@@ -1322,112 +1302,97 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @class Leaderboard
      * @memberof module:Scoreflex.SDK
      */
-    var Leaderboard = function(leaderboardId) {
+    function Leaderboard(leaderboardId) {
       /**
        * Return the leaderboard identifier (leaderboardId).
        * @return {string} Leaderboard ID
        *
        * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Leaderboard
+       * @function module:Scoreflex.SDK.Leaderboard#getId
        */
-      var getId = function() {
+      this.getId = function() {
         return leaderboardId;
       };
+    }
 
-      /**
-       * Send a score to a leaderboard.
-       * @param {int} score - raw score
-       * @param {object} parameters - key/value pair of query string parameters
-       * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Leaderboard
-       */
-      var submitScore = function(score, parameters, handlers) {
-        if (!isInitialized()) return;
-        var params = {score:score};
-        params = pushParameters(params, parameters);
-        var body = undefined;
-        RestClient.post("/scores/"+leaderboardId, params, body, handlers);
-      };
+    /**
+     * Send a score to a leaderboard.
+     * @param {int} score - raw score
+     * @param {object} parameters - key/value pair of query string parameters
+     * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
+     *
+     * @public
+     * @function module:Scoreflex.SDK.Leaderboard#submitScore
+     */
+    Leaderboard.prototype.submitScore = function(score, parameters, handlers) {
+      if (!isInitialized()) return;
+      var params = {score:score};
+      params = pushParameters(params, parameters);
+      var body = undefined;
+      RestClient.post("/scores/"+this.getId(), params, body, handlers);
+    };
 
-      /**
-       * Display a web client for the requested leaderboard.
-       * @param {object} parameters - key/value pair of query string parameters
-       * @param {object} options - key/value pair of WebClient options
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Leaderboard
-       */
-      var show = function(parameters, options) {
-        if (!isInitialized()) return;
-        var params = pushParameters({}, parameters);
-        var defaultOpt = {style:'full'};
-        WebClient.show("/web/leaderboards/"+leaderboardId, params, options, defaultOpt);
-      };
+    /**
+     * Display a web client for the requested leaderboard.
+     * @param {object} parameters - key/value pair of query string parameters
+     * @param {object} options - key/value pair of WebClient options
+     *
+     * @public
+     * @function module:Scoreflex.SDK.Leaderboard#show
+     */
+    Leaderboard.prototype.show = function(parameters, options) {
+      if (!isInitialized()) return;
+      var params = pushParameters({}, parameters);
+      var defaultOpt = {style:'full'};
+      WebClient.show("/web/leaderboards/"+this.getId(), params, options, defaultOpt);
+    };
 
-      /**
-       * Display a web client for the requested leaderboard overview.
-       * @param {object} parameters - key/value pair of query string parameters
-       * @param {object} options - key/value pair of WebClient options
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Leaderboard
-       */
-      var showOverview = function(parameters, options) {
-        if (!isInitialized()) return;
-        var params = pushParameters({}, parameters);
-        var defaultOpt = {style:'full'};
-        WebClient.show("/web/leaderboards/"+leaderboardId+"/overview", params, options, defaultOpt);
-      };
+    /**
+     * Display a web client for the requested leaderboard overview.
+     * @param {object} parameters - key/value pair of query string parameters
+     * @param {object} options - key/value pair of WebClient options
+     *
+     * @public
+     * @function module:Scoreflex.SDK.Leaderboard#showOverview
+     */
+    Leaderboard.prototype.showOverview = function(parameters, options) {
+      if (!isInitialized()) return;
+      var params = pushParameters({}, parameters);
+      var defaultOpt = {style:'full'};
+      WebClient.show("/web/leaderboards/"+this.getId()+"/overview", params, options, defaultOpt);
+    };
 
-      /**
-       * Display a web client with the current player's score for the requested
-       * leaderboard.
-       * @param {object} parameters - (facultative, the last score of the player} 'score':{int}
-       * @param {object} options - key/value pair of WebClient options
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Leaderboard
-       */
-      var showRankbox = function(parameters, options) {
-        if (!isInitialized()) return;
-        var params = pushParameters({}, parameters);
-        var defaultOpt = {style:'panel'};
-        WebClient.show("/web/scores/"+leaderboardId+"/ranks", params, options, defaultOpt);
-      };
+    /**
+     * Display a web client with the current player's score for the requested
+     * leaderboard.
+     * @param {object} parameters - (facultative, the last score of the player} 'score':{int}
+     * @param {object} options - key/value pair of WebClient options
+     *
+     * @public
+     * @function module:Scoreflex.SDK.Leaderboard#showRankbox
+     */
+    Leaderboard.prototype.showRankbox = function(parameters, options) {
+      if (!isInitialized()) return;
+      var params = pushParameters({}, parameters);
+      var defaultOpt = {style:'panel'};
+      WebClient.show("/web/scores/"+this.getId()+"/ranks", params, options, defaultOpt);
+    };
 
-      /**
-       * Put a score and show the rankbox. The rankbox takes into account
-       * the score.
-       * @param {int} score - raw score
-       * @param {object} parameters - key/value pair of query string parameters
-       * @param {object} options - key/value pair of WebClient options
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.Leaderboard
-       */
-      var submitScoreAndShowRankbox = function(score, parameters, options) {
-        submitScore(score, parameters);
-        var params = parameters || {};
-        params.score = score;
-        showRankbox(params, options);
-      };
-
-      return {
-        getId:getId,
-        submitScore:submitScore,
-        show:show,
-        showOverview:showOverview,
-        showRankbox:showRankbox,
-        submitScoreAndShowRankbox:submitScoreAndShowRankbox
-      };
+    /**
+     * Put a score and show the rankbox. The rankbox takes into account
+     * the score.
+     * @param {int} score - raw score
+     * @param {object} parameters - key/value pair of query string parameters
+     * @param {object} options - key/value pair of WebClient options
+     *
+     * @public
+     * @function module:Scoreflex.SDK.Leaderboard#submitScoreAndShowRankbox
+     */
+    Leaderboard.prototype.submitScoreAndShowRankbox = function(score, parameters, options) {
+      this.submitScore(score, parameters);
+      var params = parameters || {};
+      params.score = score;
+      this.showRankbox(params, options);
     };
     //-- Leaderboard object end
 
@@ -1448,7 +1413,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Leaderboards
        */
       var get = function(leaderboardId) {
-        return Leaderboard(leaderboardId);
+        return new Leaderboard(leaderboardId);
       };
 
       return {
@@ -1468,7 +1433,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @class ChallengeInstance
      * @memberof module:Scoreflex.SDK
      */
-    var ChallengeInstance = function(instanceId, configId) {
+    function ChallengeInstance(instanceId, configId) {
       var cache_players = null;
 
       /**
@@ -1476,10 +1441,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @return {string} Challenge instance ID
        *
        * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.ChallengeInstance
+       * @function module:Scoreflex.SDK.ChallengeInstance#getInstanceId
        */
-      var getInstanceId = function() {
+      this.getInstanceId = function() {
         return instanceId;
       };
 
@@ -1489,26 +1453,10 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @return {string} Challenge configuration ID
        *
        * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.ChallengeInstance
+       * @function module:Scoreflex.SDK.ChallengeInstance#getConfigId
        */
-      var getConfigId = function() {
+      this.getConfigId = function() {
         return configId;
-      };
-
-      /**
-       * Get details of the challenge.
-       * @param {object} parameters - key/value pair of query string parameters
-       * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.ChallengeInstance
-       */
-      var getDetails = function(parameters, handlers) {
-        if (!isInitialized()) return;
-        var params = pushParameters(params, parameters);
-        RestClient.get("/challenges/instances/"+instanceId, params, handlers);
       };
 
       /**
@@ -1519,12 +1467,11 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @param {boolean} noCache - if true, bypass the local cache
        *
        * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.ChallengeInstance
+       * @function module:Scoreflex.SDK.ChallengeInstance#getPlayers
        */
-      var getPlayers = function(parameters, handlers, noCache) {
+      this.getPlayers = function(parameters, handlers, noCache) {
         if (handlers === undefined) handlers = {};
-        if (!noCache && cache_participants !== null) {
+        if (!noCache && cache_players !== null) {
           if (handlers.onload) {
             setTimeout(function(){handlers.onload.call(null, cache_players);}, 0);
           }
@@ -1541,13 +1488,13 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
               // prebuild Player objects without data
               for (id in participants) {
                 count++;
-                players[id] = Player(id, {});
+                players[id] = new Player(id, {});
               }
               var incrementalHandler = function(pjson) {
                 received++;
                 if (pjson.id) {
                   // update Player object with data
-                  players[pjson.id] = Player(pjson.id, pjson);
+                  players[pjson.id] = new Player(pjson.id, pjson);
                 }
                 if (received >= count) {
                   cache_players = players;
@@ -1567,101 +1514,102 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
               if (handlers.onerror) handler.onerror.apply(this, arguments);
             }
           };
-          getDetails(parameters, detailsHandlers);
+          this.getDetails(parameters, detailsHandlers);
         }
       };
+    }
 
-      /**
-       * Get turn details of a challenge instance.
-       * @param {object} parameters - key/value pair of query string parameters
-       * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.ChallengeInstance
-       */
-      var getTurns = function(parameters, handlers) {
-        if (!isInitialized()) return;
-        var params = pushParameters(params, parameters);
-        RestClient.get("/challenges/instances/"+instanceId+"/turns", params, handlers);
-      };
+    /**
+     * Get details of the challenge.
+     * @param {object} parameters - key/value pair of query string parameters
+     * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
+     *
+     * @public
+     * @function module:Scoreflex.SDK.ChallengeInstance#getDetails
+     */
+    ChallengeInstance.prototype.getDetails = function(parameters, handlers) {
+      if (!isInitialized()) return;
+      var params = pushParameters(params, parameters);
+      RestClient.get("/challenges/instances/"+this.getInstanceId(), params, handlers);
+    };
 
-      /**
-       * Generic function to submit a challenge player's turn.
-       * @param {object} turnBody - {@link http://developer.scoreflex.com/docs}
-       * @param {object} parameters - key/value pair of query string parameters
-       * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
-       *
-       * @todo set link to challenge's turns documentation
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.ChallengeInstance
-       */
-      var submitTurn = function(turnBody, parameters, handlers) {
-        if (!isInitialized()) return;
-        if (!turnBody || turnBody.turnSequence === undefined) {
-          // request the turnSequence if we don't have it
-          getDetails({fields:"turn"}, {
-            onload: function() {
-              var json = this.responseJSON || {};
-              var turnSequence = (json.turn || {}).sequence || 0;
-              var newTurnBody = turnBody || {};
-              newTurnBody.turnSequence = turnSequence;
-              submitTurn(newTurnBody, parameters, handlers);
-            },
-            onerror: (handlers || {}).onerror
-          });
-        }
-        else {
-          // do the real turn post, with the turnSequence
-          var params = {body:JSON.stringify(turnBody)};
-          params = pushParameters(params, parameters);
-          var body = undefined;
-          RestClient.post("/challenges/instances/"+instanceId+"/turns", params, body, handlers);
-        }
-      };
 
-      /**
-       * Specialized function to submit a challenge player's turn with score only.
-       * @param {int} score - raw score
-       * @param {object} parameters - (facultative, the score metadata) 'meta':{string}
-       * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.ChallengeInstance
-       */
-      var submitTurnScore = function(score, parameters, handlers) {
-        var turnBody = {score:score};
-        submitTurn(turnBody, parameters, handlers);
-      };
 
-      /**
-       * Display a web client with the details of a challenge instance.
-       * @param {object} parameters - key/value pair of query string parameters
-       * @param {object} options - key/value pair of WebClient options
-       *
-       * @public
-       * @instance
-       * @memberof module:Scoreflex.SDK.ChallengeInstance
-       */
-      var showDetails = function(parameters, options) {
-        if (!isInitialized()) return;
-        var params = pushParameters({}, parameters);
-        var defaultOpt = {style:'full'};
-        WebClient.show("/web/challenges/instances/"+instanceId, params, options, defaultOpt);
-      };
+    /**
+     * Get turn details of a challenge instance.
+     * @param {object} parameters - key/value pair of query string parameters
+     * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
+     *
+     * @public
+     * @function module:Scoreflex.SDK.ChallengeInstance#getTurns
+     */
+    ChallengeInstance.prototype.getTurns = function(parameters, handlers) {
+      if (!isInitialized()) return;
+      var params = pushParameters(params, parameters);
+      RestClient.get("/challenges/instances/"+this.getInstanceId()+"/turns", params, handlers);
+    };
 
-      return {
-        getInstanceId:getInstanceId,
-        getConfigId:getConfigId,
-        getDetails:getDetails,
-        getPlayers:getPlayers,
-        getTurns:getTurns,
-        submitTurn:submitTurn,
-        submitTurnScore:submitTurnScore,
-        showDetails:showDetails
-      };
+    /**
+     * Generic function to submit a challenge player's turn.
+     * @param {object} turnBody - {@link http://developer.scoreflex.com/docs}
+     * @param {object} parameters - key/value pair of query string parameters
+     * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
+     *
+     * @see {@link https://developer.scoreflex.com/docs/guide/challenges/reference#guide-challenges-reference-challengeturn}
+     * @public
+     * @function module:Scoreflex.SDK.ChallengeInstance#submitTurn
+     */
+    ChallengeInstance.prototype.submitTurn = function(turnBody, parameters, handlers) {
+      if (!isInitialized()) return;
+      if (!turnBody || turnBody.turnSequence === undefined) {
+        // request the turnSequence if we don't have it
+        this.getDetails({fields:"turn"}, {
+          onload: function() {
+            var json = this.responseJSON || {};
+            var turnSequence = (json.turn || {}).sequence || 0;
+            var newTurnBody = turnBody || {};
+            newTurnBody.turnSequence = turnSequence;
+            this.submitTurn(newTurnBody, parameters, handlers);
+          },
+          onerror: (handlers || {}).onerror
+        });
+      }
+      else {
+        // do the real turn post, with the turnSequence
+        var params = {body:JSON.stringify(turnBody)};
+        params = pushParameters(params, parameters);
+        var body = undefined;
+        RestClient.post("/challenges/instances/"+this.getInstanceId()+"/turns", params, body, handlers);
+      }
+    };
+
+    /**
+     * Specialized function to submit a challenge player's turn with score only.
+     * @param {int} score - raw score
+     * @param {object} parameters - (facultative, the score metadata) 'meta':{string}
+     * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
+     *
+     * @public
+     * @function module:Scoreflex.SDK.ChallengeInstance#submitTurnScore
+     */
+    ChallengeInstance.prototype.submitTurnScore = function(score, parameters, handlers) {
+      var turnBody = {score:score};
+      this.submitTurn(turnBody, parameters, handlers);
+    };
+
+    /**
+     * Display a web client with the details of a challenge instance.
+     * @param {object} parameters - key/value pair of query string parameters
+     * @param {object} options - key/value pair of WebClient options
+     *
+     * @public
+     * @function module:Scoreflex.SDK.ChallengeInstance#showDetails
+     */
+    ChallengeInstance.prototype.showDetails = function(parameters, options) {
+      if (!isInitialized()) return;
+      var params = pushParameters({}, parameters);
+      var defaultOpt = {style:'full'};
+      WebClient.show("/web/challenges/instances/"+this.getInstanceId(), params, options, defaultOpt);
     };
     //-- ChallengeInstance object end
 
@@ -2043,11 +1991,21 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       }
     };
 
+    var is = function(obj, type) {
+      switch(type) {
+        case "Player": return obj instanceof Player;
+        case "Leaderboard": return obj instanceof Leaderboard;
+        case "ChallengeInstance": return obj instanceof ChallengeInstance;
+      };
+      return false;
+    };
+
     initialize(clientId, clientSecret, useSandbox);
 
     return {
       // misc
       reset:reset, // delete localStorage session data
+      is:is,
       getSessionState:getSessionState,
       // rest api
       RestClient: RestClient,
