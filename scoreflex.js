@@ -2091,9 +2091,14 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
     };
 
     /**
-     * Check the type of an object
+     * Check the type of an object.
+     *
      * @param {object} obj
-     * @param {"Player"|"Leaderboard"|"ChallengeInstance"} type
+     * @param {string} type It should be "Player", "Leaderboard" or
+     * "ChallengeInstance". For other values, the function returns false.
+     *
+     * @return <code>true</code> if the given object match the type,
+     * <code>false</code> otherwise.
      *
      * @public
      * @memberof module:Scoreflex.SDK
