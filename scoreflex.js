@@ -213,6 +213,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       sid:null,
       playerId:null
     };
+    var _exports = {};
 
 
     //-- Common
@@ -543,7 +544,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @namespace RestClient
      * @memberof module:Scoreflex.SDK
      */
-    var RestClient = (function() {
+    var RestClient = (function(exports) {
       /*
        * CONSTANTS
        */
@@ -643,11 +644,24 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         Common.request('POST', url, parameters, body, headers, handlers);
       };
 
+      /**
+       * Clean up the RestClient object
+       * @private
+       * @memberof module:Scoreflex.SDK.RestClient
+       */
+      var destroy = function() {
+        // nothing to clean up
+      };
+
+      exports.RestClient = {
+        destroy:destroy
+      };
+
       return{
         post:post,
         get:get
       };
-    })();
+    })(_exports);
     //-- REST API end
 
 
@@ -658,7 +672,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @namespace WebClient
      * @memberof module:Scoreflex.SDK
      */
-    var WebClient = (function(){
+    var WebClient = (function(exports){
 
       /*
        * CONSTANTS
@@ -1001,11 +1015,30 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         }
       };
 
+      /**
+       * Clean up the WebClient object
+       * @private
+       * @memberof module:Scorelfex.SDK.WebClient
+       */
+      var destroy = function() {
+        // stop listening for events
+        window.removeEventListener("message", onUrlChange, false);
+        // close all the opened iframes
+        var iframeId;
+        while (iframeId = getStackTopId()) {
+          close(iframeId);
+        }
+      };
+
+      exports.WebClient = {
+        destroy:destroy
+      };
+
       return {
         show:show,
         close:close
       };
-    })();
+    })(_exports);
     //-- WEB API end
 
 
@@ -1016,7 +1049,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @namespace Storage
      * @memberof module:Scoreflex.SDK
      */
-    var Storage = (function(){
+    var Storage = (function(exports){
       var _ns = 'SFX_' + clientId + '_' + (useSandbox ? '1' : '0');
       /**
        * Get an object by key.
@@ -1056,12 +1089,14 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         return localStorage.removeItem(_ns + key);
       };
 
+      exports.Storage = {};
+
       return {
         get:get,
         set:set,
         rm:rm
       };
-    })();
+    })(_exports);
     //-- STORAGE end
 
 
@@ -1199,7 +1234,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @namespace Players
      * @memberof module:Scoreflex.SDK
      */
-    var Players = (function() {
+    var Players = (function(exports) {
       var cache = {};
 
       /**
@@ -1283,13 +1318,27 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         WebClient.show("/web/players/"+playerId+"/friends", params, options, defaultOpt);
       };
 
+      /**
+       * Clean up the Players object
+       * @private
+       * @memberof module:Scoreflex.SDK.Players
+       */
+      var destroy = function() {
+        // clean up cache
+        cache = {};
+      };
+
+      exports.Players = {
+        destroy:destroy
+      };
+
       return  {
         get:get,
         getCurrent:getCurrent,
         showProfile:showProfile,
         showFriends:showFriends
       };
-    })();
+    })(_exports);
     //-- Players static end
 
 
@@ -1404,7 +1453,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @namespace Leaderboards
      * @memberof module:Scoreflex.SDK
      */
-    var Leaderboards = (function() {
+    var Leaderboards = (function(exports) {
       /**
        * Get a Leaderboard instance
        * @return {module:Scoreflex.SDK.Leaderboard} Leaderboard instance
@@ -1416,10 +1465,23 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         return new Leaderboard(leaderboardId);
       };
 
+      /**
+       * Clean up the Leaderboards object
+       * @private
+       * @memberof module:Scoreflex.SDK.Leaderboards
+       */
+      var destroy = function() {
+        // nothing to clean up
+      };
+
+      exports.Leaderboards = {
+        destroy:destroy
+      };
+
       return {
         get:get
       };
-    })();
+    })(_exports);
     //-- Leaderboards static end
 
 
@@ -1621,9 +1683,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @namespace Challenges
      * @memberof module:Scoreflex.SDK
      */
-    var Challenges = (function() {
-      var cache = {};
-
+    var Challenges = (function(exports) {
       /**
        * Display a web client with the list of challenges of the player.
        * @param {object} parameters - key/value pair of query string parameters
@@ -1653,11 +1713,24 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         return new ChallengeInstance(challengeInstanceId, challengeConfigId);
       };
 
+      /**
+       * Clean up the Challenges object
+       * @private
+       * @memberof module:Scoreflex.SDK.Challenges
+       */
+      var destroy = function() {
+        // nothing to clean up
+      };
+
+      exports.Challenges = {
+        destroy:destroy
+      };
+
       return  {
         showChallenges:showChallenges,
         get:get
       };
-    })();
+    })(_exports);
     //-- Challenges static end
 
 
@@ -1991,6 +2064,14 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       }
     };
 
+    /**
+     * Check the type of an object
+     * @param {object} obj
+     * @param {"Player"|"Leaderboard"|"ChallengeInstance"} type
+     *
+     * @public
+     * @memberof module:Scoreflex.SDK
+     */
     var is = function(obj, type) {
       switch(type) {
         case "Player": return obj instanceof Player;
@@ -2000,12 +2081,42 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       return false;
     };
 
+    /**
+     * Prepare the deletion of the SDK object.
+     * Clean up object and reinit the SDK
+     *
+     * @public
+     * @memberof module:Scoreflex.SDK
+     */
+    var destroy = function() {
+      _exports.RestClient.destroy();
+      _exports.WebClient.destroy();
+      _exports.Players.destroy();
+      _exports.Leaderboards.destroy();
+      _exports.Challenges.destroy();
+
+      _initialized = false;
+      _initState = Scoreflex.SessionState.INIT_UNSTARTED;
+
+      _context = {
+        clientId:null,
+        clientSecret:null,
+        useSandbox:true
+      };
+      _session = {
+        accessToken:null,
+        sid:null,
+        playerId:null
+      };
+    };
+
     initialize(clientId, clientSecret, useSandbox);
 
     return {
       // misc
       reset:reset, // delete localStorage session data
       is:is,
+      destroy:destroy,
       getSessionState:getSessionState,
       // rest api
       RestClient: RestClient,
@@ -2040,7 +2151,7 @@ Scoreflex.SessionState = {
   /**
    * Session initialization is not started
    */
-  INIT_UNSTARTED: 0,
+  INIT_UNSTARTED: 0, // STOPPED
   /**
    * Session initialization is in progress
    */
@@ -2048,7 +2159,7 @@ Scoreflex.SessionState = {
   /**
    * Session initilialization is successful
    */
-  INIT_SUCCESS: 2
+  INIT_SUCCESS: 2 // STARTED
 };
 
 /**
