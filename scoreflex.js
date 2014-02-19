@@ -1650,7 +1650,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Challenges
        */
       var get = function(challengeInstanceId, challengeConfigId) {
-        return ChallengeInstance(challengeInstanceId, challengeConfigId);
+        return new ChallengeInstance(challengeInstanceId, challengeConfigId);
       };
 
       return  {
