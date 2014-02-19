@@ -1645,13 +1645,14 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       }
       if (!turnBody || turnBody.turnSequence === undefined) {
         // request the turnSequence if we don't have it
+        var me = this;
         this.getDetails({fields:"turn"}, {
           onload: function() {
             var json = this.responseJSON || {};
             var turnSequence = (json.turn || {}).sequence || 0;
             var newTurnBody = turnBody || {};
             newTurnBody.turnSequence = turnSequence;
-            this.submitTurn(newTurnBody, parameters, handlers);
+            me.submitTurn(newTurnBody, parameters, handlers);
           },
           onerror: (handlers || {}).onerror
         });
