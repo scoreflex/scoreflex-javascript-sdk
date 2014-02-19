@@ -59,6 +59,34 @@
   };
 
   var allTests = function() {
+    module("DESTRUCTION");
+    asyncTest("Destroy the SDK instance", function() {
+      expect(3);
+
+      var handler = function(event) {
+        var eventData = event.detail || {};
+        if (eventData.name === 'session' && eventData.state === Scoreflex.SessionState.INIT_SUCCESS) {
+          window.removeEventListener('ScoreflexEvent', handler, false);
+
+          ok(SDK.getSessionState() === Scoreflex.SessionState.INIT_SUCCESS);
+          SDK.destroy();
+          ok(SDK.getSessionState() === Scoreflex.SessionState.INIT_UNSTARTED);
+
+          try {
+            Players.get('1234567890abcdef', {}, {}, true);
+            ok(false);
+          }
+          catch(e) {
+            ok(true);
+          }
+
+          start();
+        }
+      };
+      window.addEventListener('ScoreflexEvent', handler, false);
+      var SDK = Scoreflex(clientId, clientSecret, useSandbox);
+    });
+
     module("PUBLIC API");
     test("Scoreflex public API", function() {
       var SDK = Scoreflex(clientId, clientSecret, useSandbox);
