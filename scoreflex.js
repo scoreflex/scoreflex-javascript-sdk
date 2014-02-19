@@ -2050,3 +2050,126 @@ Scoreflex.SessionState = {
    */
   INIT_SUCCESS: 2
 };
+
+/**
+ * Thrown to indicate that an operation as been attempted at an inappropriate
+ * time.
+ *
+ * @class InvalidStateException
+ * @param {string} message The Human-readable description of the error.
+ * @memberof module:Scoreflex
+ * @public
+ */
+Scoreflex.InvalidStateException = function InvalidStateException(message) {
+    /**
+     * The error name, here "InvalidStateException"
+     *
+     * @member {string} name
+     * @memberof module:Scoreflex.InvalidStateException
+     * @instance
+     * @public
+     */
+    this.name = "InvalidStateException";
+
+    /**
+     * The Human-readable description of the error.
+     *
+     * @member {string} message
+     * @memberof module:Scoreflex.InvalidStateException
+     * @instance
+     * @public
+     */
+    this.message = message;
+};
+
+/**
+ * Thrown to indicate that a function has been passed an illegal or
+ * inappropriate argument time.
+ *
+ * @class InvalidArgumentException
+ * @param {string} message The Human-readable description of the error.
+ * @memberof module:Scoreflex
+ * @public
+ */
+Scoreflex.InvalidArgumentException = function InvalidArgumentException(message) {
+    /**
+     * The error name, here "InvalidArgumentException"
+     *
+     * @member {string} name
+     * @memberof module:Scoreflex.InvalidArgumentException
+     * @instance
+     * @public
+     */
+    this.name = "InvalidArgumentException";
+
+    /**
+     * The Human-readable description of the error.
+     *
+     * @member {string} message
+     * @memberof module:Scoreflex.InvalidArgumentException
+     * @instance
+     * @public
+     */
+    this.message = message;
+};
+
+/**
+ * Thrown when an application attempts to use <code>null</code> or
+ * <code>undefined</code> in a case where an object is required.
+ *
+ * @class NullReferenceException
+ * @param {string} message The Human-readable description of the error.
+ * @memberof module:Scoreflex
+ * @public
+ */
+Scoreflex.NullReferenceException = function NullReferenceException(message) {
+    /**
+     * The error name, here "NullReferenceException"
+     *
+     * @member {string} name
+     * @memberof module:Scoreflex.NullReferenceException
+     * @instance
+     * @public
+     */
+    this.name = "NullReferenceException";
+
+    /**
+     * The Human-readable description of the error.
+     *
+     * @member {string} message
+     * @memberof module:Scoreflex.NullReferenceException
+     * @instance
+     * @public
+     */
+    this.message = message;
+};
+
+/**
+ * Thrown to indicate that the requested operation is not supported.
+ *
+ * @class UnsupportedOperationException
+ * @param {string} message The Human-readable description of the error.
+ * @memberof module:Scoreflex
+ * @public
+ */
+Scoreflex.UnsupportedOperationException = function UnsupportedOperationException(message) {
+    /**
+     * The error name, here "UnsupportedOperationException"
+     *
+     * @member {string} name
+     * @memberof module:Scoreflex.UnsupportedOperationException
+     * @instance
+     * @public
+     */
+    this.name = "UnsupportedOperationException";
+
+    /**
+     * The Human-readable description of the error.
+     *
+     * @member {string} message
+     * @memberof module:Scoreflex.UnsupportedOperationException
+     * @instance
+     * @public
+     */
+    this.message = message;
+};
