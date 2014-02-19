@@ -1262,7 +1262,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Players
        */
       var get = function(playerId, parameters, handlers, noCache) {
-        if (!isInitialized()) return;
+        if (!isInitialized()) {
+          throw new Scoreflex.InvalidStateException("SDK not initialized");
+        }
         if (handlers === undefined) handlers = {};
 
         if (!noCache && cache[playerId]) {
@@ -1294,7 +1296,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Players
        */
       var showProfile = function(playerId, parameters, options) {
-        if (!isInitialized()) return;
+        if (!isInitialized()) {
+          throw new Scoreflex.InvalidStateException("SDK not initialized");
+        }
         if (playerId === undefined) playerId = 'me';
         var params = pushParameters({}, parameters);
         var defaultOpt = {style:'full'};
@@ -1311,7 +1315,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Players
        */
       var showFriends = function(playerId, parameters, options) {
-        if (!isInitialized()) return;
+        if (!isInitialized()) {
+          throw new Scoreflex.InvalidStateException("SDK not initialized");
+        }
         if (playerId === undefined) playerId = 'me';
         var params = pushParameters({}, parameters);
         var defaultOpt = {style:'full'};
@@ -1374,7 +1380,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @function module:Scoreflex.SDK.Leaderboard#submitScore
      */
     Leaderboard.prototype.submitScore = function(score, parameters, handlers) {
-      if (!isInitialized()) return;
+      if (!isInitialized()) {
+        throw new Scoreflex.InvalidStateException("SDK not initialized");
+      }
       var params = {score:score};
       params = pushParameters(params, parameters);
       var body = undefined;
@@ -1390,7 +1398,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @function module:Scoreflex.SDK.Leaderboard#show
      */
     Leaderboard.prototype.show = function(parameters, options) {
-      if (!isInitialized()) return;
+      if (!isInitialized()) {
+        throw new Scoreflex.InvalidStateException("SDK not initialized");
+      }
       var params = pushParameters({}, parameters);
       var defaultOpt = {style:'full'};
       WebClient.show("/web/leaderboards/"+this.getId(), params, options, defaultOpt);
@@ -1405,7 +1415,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @function module:Scoreflex.SDK.Leaderboard#showOverview
      */
     Leaderboard.prototype.showOverview = function(parameters, options) {
-      if (!isInitialized()) return;
+      if (!isInitialized()) {
+        throw new Scoreflex.InvalidStateException("SDK not initialized");
+      }
       var params = pushParameters({}, parameters);
       var defaultOpt = {style:'full'};
       WebClient.show("/web/leaderboards/"+this.getId()+"/overview", params, options, defaultOpt);
@@ -1421,7 +1433,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @function module:Scoreflex.SDK.Leaderboard#showRankbox
      */
     Leaderboard.prototype.showRankbox = function(parameters, options) {
-      if (!isInitialized()) return;
+      if (!isInitialized()) {
+        throw new Scoreflex.InvalidStateException("SDK not initialized");
+      }
       var params = pushParameters({}, parameters);
       var defaultOpt = {style:'panel'};
       WebClient.show("/web/scores/"+this.getId()+"/ranks", params, options, defaultOpt);
@@ -1590,7 +1604,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @function module:Scoreflex.SDK.ChallengeInstance#getDetails
      */
     ChallengeInstance.prototype.getDetails = function(parameters, handlers) {
-      if (!isInitialized()) return;
+      if (!isInitialized()) {
+        throw new Scoreflex.InvalidStateException("SDK not initialized");
+      }
       var params = pushParameters(params, parameters);
       RestClient.get("/challenges/instances/"+this.getInstanceId(), params, handlers);
     };
@@ -1606,7 +1622,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @function module:Scoreflex.SDK.ChallengeInstance#getTurns
      */
     ChallengeInstance.prototype.getTurns = function(parameters, handlers) {
-      if (!isInitialized()) return;
+      if (!isInitialized()) {
+        throw new Scoreflex.InvalidStateException("SDK not initialized");
+      }
       var params = pushParameters(params, parameters);
       RestClient.get("/challenges/instances/"+this.getInstanceId()+"/turns", params, handlers);
     };
@@ -1622,7 +1640,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @function module:Scoreflex.SDK.ChallengeInstance#submitTurn
      */
     ChallengeInstance.prototype.submitTurn = function(turnBody, parameters, handlers) {
-      if (!isInitialized()) return;
+      if (!isInitialized()) {
+        throw new Scoreflex.InvalidStateException("SDK not initialized");
+      }
       if (!turnBody || turnBody.turnSequence === undefined) {
         // request the turnSequence if we don't have it
         this.getDetails({fields:"turn"}, {
@@ -1668,7 +1688,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @function module:Scoreflex.SDK.ChallengeInstance#showDetails
      */
     ChallengeInstance.prototype.showDetails = function(parameters, options) {
-      if (!isInitialized()) return;
+      if (!isInitialized()) {
+        throw new Scoreflex.InvalidStateException("SDK not initialized");
+      }
       var params = pushParameters({}, parameters);
       var defaultOpt = {style:'full'};
       WebClient.show("/web/challenges/instances/"+this.getInstanceId(), params, options, defaultOpt);
@@ -1693,7 +1715,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Challenges
        */
       var showChallenges = function(parameters, options) {
-        if (!isInitialized()) return;
+        if (!isInitialized()) {
+          throw new Scoreflex.InvalidStateException("SDK not initialized");
+        }
         var params = pushParameters({}, parameters);
         var defaultOpt = {style:'full'};
         WebClient.show("/web/challenges", params, options, defaultOpt);
@@ -2043,7 +2067,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @memberof module:Scoreflex.SDK
      */
     var authorize = function(parameters, options) {
-      if (!isInitialized()) return;
+      if (!isInitialized()) {
+        throw new Scoreflex.InvalidStateException("SDK not initialized");
+      }
       var session = getSession();
       if (session.anonymous === true) {
         var context = getContext();
