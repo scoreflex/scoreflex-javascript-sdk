@@ -512,7 +512,8 @@ Scoreflex.Realtime.Room = function RealtimeRoom(id, matchState, config, properti
     /**
      * Retrieves the room's configuration.
      *
-     * @return {module:Scoreflex.Realtime.Map} The room's configuration
+     * @return {module:Scoreflex.Realtime.UnmodifiableMap} The room's
+     * configuration.
      *
      * @method getConfig
      * @memberof module:Scoreflex.Realtime.Room
@@ -540,7 +541,8 @@ Scoreflex.Realtime.Room = function RealtimeRoom(id, matchState, config, properti
     /**
      * Retrieves the room's properties.
      *
-     * @return {module:Scoreflex.Realtime.MapValue} The room's properties.
+     * @return {module:Scoreflex.Realtime.UnmodifiableMap} The room's
+     * properties.
      *
      * @method getProperties
      * @memberof module:Scoreflex.Realtime.Room
@@ -669,7 +671,8 @@ Scoreflex.Realtime.UnmodifiableRoom = function UnmodifiableRoom(room) {
      * Call [Room.getConfig]{@link module:Scoreflex.Realtime.Room#getConfig} on
      * the wrapped room.
      *
-     * @return {module:Scoreflex.Realtime.Map} The room's configuration
+     * @return {module:Scoreflex.Realtime.UnmodifiableMap} The room's
+     * configuration.
      *
      * @method getConfig
      * @instance
@@ -702,7 +705,8 @@ Scoreflex.Realtime.UnmodifiableRoom = function UnmodifiableRoom(room) {
      * Call [Room.getProperties]{@link
      * module:Scoreflex.Realtime.Room#getProperties} on the wrapped room.
      *
-     * @return {module:Scoreflex.Realtime.MapValue} The room's properties.
+     * @return {module:Scoreflex.Realtime.UnmodifiableMap} The room's
+     * properties.
      *
      * @method getProperties
      * @instance
@@ -1748,8 +1752,9 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
     /**
      * Retrieves information associated to the realtime session.
      *
-     * @return {module:Scoreflex.Realtime.Map} The session's information. If the
-     * session is not connected, this method returns <code>null</code>.
+     * @return {module:Scoreflex.Realtime.UnmodifiableMap} The session's
+     * information. If the session is not connected, this method returns
+     * <code>null</code>.
      *
      * @throws {module:Scoreflex.InvalidStateException} if the realtime session
      * is not initialized yet.
@@ -1766,8 +1771,8 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
     /**
      * Retrieves the room which the player joined.
      *
-     * @return {module:Scoreflex.Realtime.Room} The current player's room. if
-     * the player has not joined any rooms, this method returns
+     * @return {module:Scoreflex.Realtime.UnmodifiableRoom} The current player's
+     * room. if the player has not joined any rooms, this method returns
      * <code>null</code>.
      *
      * @throws {module:Scoreflex.InvalidStateException} if the realtime session
