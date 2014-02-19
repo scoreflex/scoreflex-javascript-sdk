@@ -24,7 +24,9 @@ all: doc
 
 doc:
 	mkdir -p "$(JSDOC_OUT_DIR)"
-	jsdoc -t $(DOC_TEMPLATE) -c $(DOC_CONF) -d $(JSDOC_OUT_DIR) -u $(JSDOC_TUTO_DIR) $(ROOTDIR)/scoreflex.js $(JSDOC_DIR)/index.md
+	jsdoc -t $(DOC_TEMPLATE) -c $(DOC_CONF) -d $(JSDOC_OUT_DIR) \
+		-u $(JSDOC_TUTO_DIR) $(ROOTDIR)/scoreflex.js 			\
+		$(ROOTDIR)/scoreflexRealtime.js $(JSDOC_DIR)/index.md
 
 clean:
 	rm -fr "$(JSDOC_OUT_DIR)"

@@ -2112,6 +2112,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       return false;
     };
 
+
     /**
      * Prepare the deletion of the SDK object.
      * Clean up object and reinit the SDK
@@ -2141,6 +2142,45 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       };
     };
 
+    /**
+     * == Realtime API ==
+     */
+    var _realtime_session = null;
+
+    /**
+     * Retrieves the Scoreflex realtime session for the current player.
+     *
+     * @return {module:Scoreflex.Realtime.Session} The singleton instance of the
+     * Scoreflex realtime session for the current player.
+     *
+     * @public
+     * @memberof module:Scoreflex.SDK
+     */
+    var getRealtimeSession = function() {
+      if (_realtime_session == null) {
+        // FIXME realtime session state !
+        var context = getContext();
+        var session = getSession();
+        _realtime_session = new Scoreflex.Realtime.Session(
+          this, context.clientId, session.playerId, session.accessToken
+        );
+      }
+      return _realtime_session;
+    };
+
+    /**
+     * Destroys the current realtime session.
+     *
+     * @public
+     * @memberof module:Scoreflex.SDK
+     */
+    var destroyRealtimeSession = function() {
+        if (_realtime_session != null && _realtime_session.isInitialized()) {
+            _realtime_session.deinitialize();
+        }
+        _realtime_session = null;
+    };
+
     initialize(clientId, clientSecret, useSandbox);
 
     return {
@@ -2149,6 +2189,8 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       is:is,
       destroy:destroy,
       getSessionState:getSessionState,
+      getRealtimeSession: getRealtimeSession,
+      destroyRealtimeSession: destroyRealtimeSession,
       // rest api
       RestClient: RestClient,
       ping:ping,
