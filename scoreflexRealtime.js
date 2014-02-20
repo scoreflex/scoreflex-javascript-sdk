@@ -237,13 +237,6 @@ Scoreflex.Realtime.ConnectionState = {
  */
 Scoreflex.Realtime.MatchState = {
     /**
-     * This is a special state used in [RoomListener.onMatchStateChanged]{@link
-     * module:Scoreflex.Realtime.RoomListener.onMatchStateChanged} callback when
-     * an error occurred.
-     */
-    UNKNOWN: 0,
-
-    /**
      * The match is not started yet. The minimum number of participants required
      * to start a match is not reached yet.
      */
@@ -2098,7 +2091,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         if (!isConnected()) {
             if (roomListener.onMatchStateChanged)
                 roomListener.onMatchStateChanged(StatusCode.STATUS_SESSION_NOT_CONNECTED,
-                                                 SessionState.currentRoom, MatchState.UNKNOWN);
+                                                 SessionState.currentRoom);
             return;
         }
 
@@ -2113,7 +2106,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         if (!sendMessage(inmsg)) {
             if (roomListener.onMatchStateChanged)
                 roomListener.onMatchStateChanged(StatusCode.STATUS_NETWORK_ERROR,
-                                                 SessionState.currentRoom, MatchState.UNKNOWN);
+                                                 SessionState.currentRoom);
             return;
         }
         SessionState.lastMsgid++;
@@ -2148,7 +2141,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         if (!isConnected()) {
             if (roomListener.onMatchStateChanged)
                 roomListener.onMatchStateChanged(StatusCode.STATUS_SESSION_NOT_CONNECTED,
-                                                 SessionState.currentRoom, MatchState.UNKNOWN);
+                                                 SessionState.currentRoom);
             return;
         }
 
@@ -2163,7 +2156,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         if (!sendMessage(inmsg)) {
             if (roomListener.onMatchStateChanged)
                 roomListener.onMatchStateChanged(StatusCode.STATUS_NETWORK_ERROR,
-                                                 SessionState.currentRoom, MatchState.UNKNOWN);
+                                                 SessionState.currentRoom);
             return;
         }
         SessionState.lastMsgid++;
@@ -2198,7 +2191,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         if (!isConnected()) {
             if (roomListener.onMatchStateChanged)
                 roomListener.onMatchStateChanged(StatusCode.STATUS_SESSION_NOT_CONNECTED,
-                                                 SessionState.currentRoom, MatchState.UNKNOWN);
+                                                 SessionState.currentRoom);
             return;
         }
 
@@ -2213,7 +2206,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         if (!sendMessage(inmsg)) {
             if (roomListener.onMatchStateChanged)
                 roomListener.onMatchStateChanged(StatusCode.STATUS_NETWORK_ERROR,
-                                                 SessionState.currentRoom, MatchState.UNKNOWN);
+                                                 SessionState.currentRoom);
             return;
         }
         SessionState.lastMsgid++;
@@ -3094,22 +3087,28 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
                     state = SessionState.currentRoom.getMatchState();
                     break;
                 }
-                SessionState.currentRoom.setMatchState(state);
+                var oldState = SessionState.currentRoom.setMatchState(state);
                 if (listener.onMatchStateChanged)
                     listener.onMatchStateChanged(StatusCode.STATUS_SUCCESS,
-                                                 SessionState.currentRoom, state);
+                                                 SessionState.currentRoom, oldState, state);
                 break;
 
               case RealtimeProto.MatchStateChanged.StatusCode.ROOM_NOT_JOINED:
                 if (listener.onMatchStateChanged)
                     listener.onMatchStateChanged(StatusCode.STATUS_ROOM_NOT_JOINED,
-                                                 SessionState.currentRoom, MatchState.UNKNOWN);
+                                                 SessionState.currentRoom);
                 break;
 
               case RealtimeProto.MatchStateChanged.StatusCode.BAD_STATE:
                 if (listener.onMatchStateChanged)
                     listener.onMatchStateChanged(StatusCode.STATUS_BAD_STATE,
-                                                 SessionState.currentRoom, MatchState.UNKNOWN);
+                                                 SessionState.currentRoom);
+                break;
+
+              case RealtimeProto.MatchStateChanged.StatusCode.PERMISSION_DENIED:
+                if (listener.onMatchStateChanged)
+                    listener.onMatchStateChanged(StatusCode.STATUS_PERMISSION_DENIED,
+                                                 SessionState.currentRoom);
                 break;
             }
             break;
@@ -3757,19 +3756,24 @@ Scoreflex.Realtime.RoomListener = function RealtimeRoomListener() {
      *   change the match's state failed because the player tries to do an
      *   invalid change (e.g. the match cannot be stopped if it is not
      *   running).</li>
+     *   <li>[STATUS_PERMISSION_DENIED]{@link
+     *   module:Scoreflex.Realtime.StatusCode.STATUS_PERMISSION_DENIED} The
+     *   attempt to change the match's state failed because the player does not
+     *   have permissions to change it.</li>
      * </ul>
      *
      * @param {module:Scoreflex.Realtime.StatusCode} status Status code
      * indication the result of the operation.
      * @param {module:Scoreflex.Realtime.Room} room The room.
+     * @param {module:Scoreflex.Realtime.MatchState} oldState The old match's
+     * state. If an error occurred, the state is <code>undefined</code>.
      * @param {module:Scoreflex.Realtime.MatchState} newState The new match's
-     * state. If an error occurred, the state is [UNKNOWN]{@link
-     * module:Scoreflex.Realtime.MatchState.UNKNOWN}.
+     * state. If an error occurred, the state is <code>undefined</code>.
      *
      * @memberof module:Scoreflex.Realtime.RoomListener
      * @public
      */
-    onMatchStateChanged = function(status, room, newState) {},
+    onMatchStateChanged = function(status, room, oldState, newState) {},
 
     /**
      * This method is called when a property of a room change. This is done by
