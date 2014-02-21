@@ -3017,7 +3017,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             delete SessionState.rcvMessageListeners[roomId];
             delete SessionState.roomListeners[roomId];
 
-            switch (msg.getRoomLef().status) {
+            switch (msg.getRoomLeft().status) {
               case RealtimeProto.RoomLeft.StatusCode.SUCCESS:
                 if (listener.onRoomLeft)
                     listener.onRoomLeft(StatusCode.STATUS_SUCCESS, roomId);
