@@ -1522,7 +1522,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         if (SessionState.state === State.INITIALIZING)
             throw new Scoreflex.InvalidStateException('Realtime session initialization already started');
         if (listener == undefined)
-            throw new Scoreflex.InvalidArgumentException('Connection listener cannot be undefined');
+            throw new Scoreflex.InvalidArgumentException('Session listener cannot be undefined');
 
         SessionState.state           = State.INITIALIZING;
         SessionState.sessionListener = listener;
@@ -1576,7 +1576,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             }
             SessionState.sessionListener = {};
         }
-    }
+    };
 
     /**
      * Retrieves the server address currently used to connect.
