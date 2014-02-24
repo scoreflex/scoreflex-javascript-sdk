@@ -1412,7 +1412,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
 
     /* Get the realtime protocol builder */
     var RealtimeProto = dcodeIO.ProtoBuf
-        .protoFromFile(realtimeScriptPath+'realtime.proto')
+        .protoFromFile(realtimeScriptPath+'protobuf/realtime.proto')
         .build('realtime.proto');
 
     /* Get the websocket object */
