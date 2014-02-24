@@ -1809,7 +1809,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             throw new Scoreflex.InvalidArgumentException('Connection listener cannot be undefined');
 
         if (SessionState.retries >= SessionState.maxReties) {
-            retries = 0;
+            SessionState.retries = 0;
             if (listener.onConnectionFailed)
                 listener.onConnectionFailed(StatusCode.STATUS_NETWORK_ERROR);
             return;
@@ -2722,7 +2722,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
                     connectionListener.onConnectionFailed(StatusCode.STATUS_INVALID_MESSAGE);
                 break;
               case RealtimeProto.ConnectionFailed.StatusCode.PROTOCOL_ERROR:
-                retries = 0;
+                SessionState.retries = 0;
                 if (connectionListener.onConnectionFailed)
                     connectionListener.onConnectionFailed(StatusCode.STATUS_PROTOCOL_ERROR);
                 break;
