@@ -1692,7 +1692,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
      */
     var setMaxRetries = function(n) {
         checkInstance();
-        SessionState.maxReties = 3;
+        SessionState.maxReties = n;
     };
 
     /**
@@ -2745,7 +2745,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
                     connectionListener.onConnectionFailed(StatusCode.STATUS_PERMISSION_DENIED);
                 break;
               case RealtimeProto.ConnectionFailed.StatusCode.ALREADY_CONNECTED:
-                retries = 0;
+                SessionState.retries = 0;
                 if (connectionListener.onConnectionFailed)
                     connectionListener.onConnectionFailed(StatusCode.STATUS_ALREADY_CONNECTED);
                 break;
