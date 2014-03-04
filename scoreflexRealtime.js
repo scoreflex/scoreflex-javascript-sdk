@@ -155,10 +155,9 @@ Scoreflex.Realtime.StatusCode = {
     /**
      * The status code used in [RoomListener.onRoomJoined]{@link
      * module:Scoreflex.Realtime.RoomListener.onRoomJoined} when the player
-     * attempts to join a room during a running match whereas the drpop-in-match
-     * option is disabled.
+     * attempts to join awith a state that does not match its join strategy.
      */
-    STATUS_NO_DROP_IN_MATCH: 16,
+    STATUS_STRATEGY_MISMATCH: 16,
 
     /**
      * The status code used in [RoomListener.onRoomCreated]{@link
@@ -307,7 +306,7 @@ Scoreflex.Realtime.RoomConfig = function RealtimeRoomConfig(roomListener, messag
      * @public
      */
     this.setMaxParticipants = function(n) {
-        this.config['max_players'] = n;
+        this.config['maxPlayers'] = n;
         return this;
     };
 
@@ -327,7 +326,7 @@ Scoreflex.Realtime.RoomConfig = function RealtimeRoomConfig(roomListener, messag
      * @public
      */
     this.setMinParticipants = function(n) {
-        this.config['min_players'] = n;
+        this.config['minPlayers'] = n;
         return this;
     };
 
@@ -347,7 +346,7 @@ Scoreflex.Realtime.RoomConfig = function RealtimeRoomConfig(roomListener, messag
      * @public
      */
     this.setTickTime = function(t) {
-        this.config['tick_time'] = t;
+        this.config['tickTime'] = t;
         return this;
     };
 
@@ -367,7 +366,7 @@ Scoreflex.Realtime.RoomConfig = function RealtimeRoomConfig(roomListener, messag
      * @public
      */
     this.setAutoStart = function(b) {
-        this.config['auto_start'] = b;
+        this.config['autoStart'] = b;
         return this;
     };
 
@@ -387,27 +386,29 @@ Scoreflex.Realtime.RoomConfig = function RealtimeRoomConfig(roomListener, messag
      * @public
      */
     this.setAutoStop = function(b) {
-        this.config['auto_stop'] = b;
+        this.config['autoStop'] = b;
         return this;
     };
 
     /**
-     * Sets the drop-in-match flag for the room. This is an optional parameter.
+     * Sets the join-strategy value for the room. This is an optional parameter.
      * <br>
-     * This option is set to <code>true</code> by default.
+     * This option is unset by default.
      *
-     * @param {boolean} b The drop-in-match flag value.
+     * @param {boolean} s The strategy value. It can be
+     * <code>beforeFirstStart</code>, <code>beforeStart</code> or
+     * <code>anymore</code>.
      *
      * @return {module:Scoreflex.Realtime.RoomConfig} The current configuration
      * object.
      *
-     * @method setDropInMatch
+     * @method setJoinStrategy
      * @memberof module:Scoreflex.Realtime.RoomConfig
      * @instance
      * @public
      */
-    this.setDropInMatch = function(b) {
-        this.config['drop_in_match'] = b;
+    this.setJoinStrategy = function(s) {
+        this.config['joinStratey'] = s;
         return this;
     };
 };
@@ -2989,11 +2990,11 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
                     listener.onRoomJoined(StatusCode.STATUS_ROOM_NOT_FOUND);
                 break;
 
-              case RealtimeProto.RoomJoined.StatusCode.NO_DROP_IN_MATCH:
+              case RealtimeProto.RoomJoined.StatusCode.STRATEGY_MISMATCH:
                 delete SessionState.roomListeners[room.getRoomId()];
                 delete SessionState.rcvMessageListeners[room.getRoomId()];
                 if (listener.onRoomJoined)
-                    listener.onRoomJoined(StatusCode.STATUS_NO_DROP_IN_MATCH);
+                    listener.onRoomJoined(StatusCode.STATUS_STRATEGY_MISMATCH);
                 break
 
               case RealtimeProto.RoomJoined.StatusCode.ROOM_FULL:
@@ -3648,10 +3649,11 @@ Scoreflex.Realtime.RoomListener = function RealtimeRoomListener() {
      *   module:Scoreflex.Realtime.StatusCode.STATUS_ROOM_FULL} The attempt to
      *   join the room failed because the maximum number of participants allowed
      *   to join the room was reached.</li>
-     *   <li>[STATUS_NO_DROP_IN_MATCH]{@link
-     *   module:Scoreflex.Realtime.StatusCode.STATUS_NO_DROP_IN_MATCH} The
-     *   attempt to join the room failed because the drop-in-match option was
-     *   disabled.</li>
+
+     *   <li>[STATUS_STRATEGY_MISMATCH]{@link
+     *   module:Scoreflex.Realtime.StatusCode.STATUS_STRATEGY_MISMATCH} The
+     *   attempt to join the room's state does not match its join strategy.</li>
+
      *   <li>[STATUS_INTERNAL_ERROR]{@link
      *   module:Scoreflex.Realtime.StatusCode.STATUS_INTERNAL_ERROR} The attempt
      *   to join the room failed due to an unexpected error.</li>
