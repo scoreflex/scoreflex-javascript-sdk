@@ -178,7 +178,14 @@ Scoreflex.Realtime.StatusCode = {
      * module:Scoreflex.Realtime.MessageSentListener.onFailure} when the player
      * attempts to send a reliable message to a unknown participant.
      */
-    STATUS_PEER_NOT_FOUND: 19
+    STATUS_PEER_NOT_FOUND: 19,
+
+    /**
+     * The status code used in [RoomListener.onSetRoomPropertyFailed]{@link
+     * module:Scoreflex.Realtime.RoomListener.onSetRoomPropertyFailed} when the
+     * player attempts to change the room's property while it is forbidden.
+     */
+    STATUS_UPDATE_FORBIDDEN: 20
 };
 
 /**
@@ -3141,7 +3148,13 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
                 if (listener.onSetRoomPropertyFailed)
                     listener.onSetRoomPropertyFailed(StatusCode.STATUS_ROOM_NOT_JOINED,
                                                      SessionState.currentRoom, prop.name);
-                break
+                break;
+
+              case RealtimeProto.RoomPropertyUpdated.StatusCode.UPDATE_FORBIDDEN:
+                if (listener.onSetRoomPropertyFailed)
+                    listener.onSetRoomPropertyFailed(StatusCode.STATUS_UPDATE_FORBIDDEN,
+                                                     SessionState.currentRoom, prop.name);
+                break;
             }
             break;
 
@@ -3811,6 +3824,10 @@ Scoreflex.Realtime.RoomListener = function RealtimeRoomListener() {
      *   module:Scoreflex.Realtime.StatusCode.STATUS_ROOM_NOT_JOINED} The
      *   attempt to change the room's property failed because the player is not
      *   a room's participant.</li>
+     *   <li>[STATUS_UPDATE_FORBIDDEN]{@link
+     *   module:Scoreflex.Realtime.StatusCode.STATUS_UPDATE_FORBIDDEN} The
+     *   attempt to change the room's property failed because the update is
+     *   forbidden.</li>
      * </ul>
      *
      * @method onSetRoomPropertyFailed
