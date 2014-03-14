@@ -582,7 +582,7 @@ Scoreflex.Realtime.Room = function RealtimeRoom(id, matchState, config, properti
     /**
      * Retrieves the match's state of the room.
      *
-     * @return {module:Scoreflex.Return.MatchState} The match's state.
+     * @return {module:Scoreflex.Realtime.MatchState} The match's state.
      *
      * @method getMatchState
      * @memberof module:Scoreflex.Realtime.Room
@@ -754,7 +754,7 @@ Scoreflex.Realtime.UnmodifiableRoom = function UnmodifiableRoom(room) {
      * Call [Room.getMatchState]{@link
      * module:Scoreflex.Realtime.Room#getMatchState} on the wrapped room.
      *
-     * @return {module:Scoreflex.Return.MatchState} The match's state.
+     * @return {module:Scoreflex.Realtime.MatchState} The match's state.
      *
      * @method getMatchState
      * @instance
@@ -1849,7 +1849,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             SessionState.ws.binaryType = 'arraybuffer';
         }
         catch (exception) {
-            console.log(exception);
             if (listener.onConnectionFailed)
                 listener.onConnectionFailed(StatusCode.STATUS_NETWORK_ERROR);
         }
@@ -1978,7 +1977,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
      * @param {module:Scoreflex.Realtime.RoomListener} roomListener The listener
      * used to notify the player of room's state changes.
      * @param {module:Scoreflex.Realtime.MessageReceivedListener}
-     * Messagelistener The listener used to notify the player when a message is
+     * MessageListener The listener used to notify the player when a message is
      * received.
      *
      * @throws {module:Scoreflex.InvalidStateException} if the realtime session
@@ -2478,7 +2477,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         }
         else {
             // FIXME: call connectionfailed ?
-            console.log('Failed to send msg');
             return false;
         }
     };
@@ -2559,13 +2557,11 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         if (isConnected()) {
             SessionState.ws = null;
             if (SessionState.reconnectFlag) {
-                console.log('WebSocket Connection closed unexpectedly, try reconnecting');
                 if (connectionListener.onReconnecting)
                     connectionListener.onReconnecting(StatusCode.STATUS_NETWORK_ERROR);
                 reconnectSession(connectionListener);
             }
             else {
-                console.log('WebSocket Connection closed unexpectedly, return a network error');
                 SessionState.retries = 0;
                 if (connectionListener.onConnectionFailed)
                     connectionListener.onConnectionFailed(StatusCode.STATUS_NETWORK_ERROR);
@@ -2587,7 +2583,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
      */
     var _onMessageReceived = function(data, connectionListener) {
         if (scoreflexSDK.Players.getCurrent().getId() !== playerId) {
-            console.log('Current player has changed. Disconnect the realtime session');
             deinitialize();
             return;
         }
@@ -2626,23 +2621,17 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         var msgid = msg.getMsgid();
 
         if (msgid > SessionState.lastRealiableId + 1) {
-            console.log('Queue reliable message '+msgid);
             SessionState.outmsgQueue[msgid] = msg;
         }
         else if (msgid == SessionState.lastRealiableId + 1) {
-            console.log('Handle reliable message '+msgid);
             SessionState.lastRealiableId = msgid;
             handleOutMessage(msg, connectionListener);
-        }
-        else {
-            console.log('Skip reliable message '+msgid);
         }
         while (true) {
             var nextMsg = SessionState.outmsgQueue[SessionState.lastRealiableId+1];
             if (nextMsg == null)
                 break;
             delete SessionState.outmsgQueue[SessionState.lastRealiableId+1];
-            console.log('Handle reliable message '+nextMsg.getMsgid());
             SessionState.lastRealiableId = nextMsg.getMsgid();
             handleOutMessage(nextMsg);
         }
@@ -2662,7 +2651,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             var room_msg = msg.getRoomMessage();
             idx = room_msg.getTag();
             if (idx == 0) {
-                console.log('Handle unreliable message '+msgid+' (tag:0)');
                 handleOutMessage(room_msg);
                 return;
             }
@@ -2672,12 +2660,8 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         }
         var last_id = SessionState.lastUnreliableIds[idx];
         if (last_id == null || msgid > last_id) {
-            console.log('Handle unreliable message '+msgid+' (tag:'+idx+')');
             SessionState.lastUnreliableIds[idx] = msgid;
             handleOutMessage(msg);
-        }
-        else {
-            console.log('Skip unreliable message '+msgid+' (tag:'+idx+')');
         }
     };
 
@@ -2689,7 +2673,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
     var handleOutMessage = function(msg, connectionListener) {
         switch (msg.type) {
         case OutMessage.Type.CONNECTED:
-            console.log('CONNECTED message received');
             SessionState.connectionStatus  = ConnectionState.CONNECTED;
             SessionState.retries           = 0;
             SessionState.sessionId         = msg.getConnected().sessionId;
@@ -2705,14 +2688,12 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
 
             for (var i = 0; i < keys.length; ++i) {
                 var inmsg = SessionState.inmsgQueue[i];
-                console.log('Resend reliable message '+inmsg.getMsgid());
                 inmsg.setAckid(SessionState.lastRealiableId);
                 sendMessage(inmsg);
             }
             break;
 
           case OutMessage.Type.CONNECTION_FAILED:
-            console.log('CONNECTION_FAILED message received');
             SessionState.ws.close();
             SessionState.connectionStatus = ConnectionState.DISCONNECTED;
             SessionState.ws               = null;
@@ -2761,7 +2742,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.CONNECTION_CLOSED:
-            console.log('CONNECTION_CLOSED message received');
             switch(msg.getConnectionClosed().getStatus()) {
               case RealtimeProto.ConnectionClosed.StatusCode.SESSION_CLOSED:
                 SessionState.ws.close();
@@ -2826,13 +2806,11 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.SYNC:
-            console.log('SYNC message received');
             SessionState.mmLatency          = msg.getSync().latency;
             SessionState.mmClockLastUpdate -= msg.getSync().latency;
             break;
 
           case OutMessage.Type.PING:
-            console.log('PING message received');
             SessionState.mmTime            = msg.getPing().getTimestamp();
             SessionState.mmClockLastUpdate = getMonotonicTime();
 
@@ -2847,7 +2825,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.ROOM_CREATED:
-            console.log('ROOM_CREATED message received');
             var room     = msg.getRoomCreated().room;
             var listener = SessionState.roomListeners[room.getRoomId()];
 
@@ -2914,7 +2891,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.ROOM_CLOSED:
-            console.log('ROOM_CLOSED message received');
             var roomId = msg.getRoomClosed().getRoomId();
 
             if (SessionState.currentRoom == null || roomId != SessionState.currentRoom.getId())
@@ -2940,7 +2916,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.ROOM_JOINED:
-            console.log('ROOM_JOINED message received');
             var room     = msg.getRoomJoined().room;
             var listener = SessionState.roomListeners[room.getRoomId()];
 
@@ -3014,7 +2989,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.ROOM_LEFT:
-            console.log('ROOM_LEFT message received');
             var roomId = msg.getRoomLeft().getRoomId();
 
             if (SessionState.currentRoom == null || roomId != SessionState.currentRoom.getId())
@@ -3044,7 +3018,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.PEER_JOINED_ROOM:
-            console.log('PEER_JOINED_ROOM message received');
             var roomId = msg.getPeerJoinedRoom().getRoomId();
 
             if (SessionState.currentRoom == null || roomId != SessionState.currentRoom.getId())
@@ -3056,7 +3029,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.PEER_LEFT_ROOM:
-            console.log('PEER_LEFT_ROOM message received');
             var roomId = msg.getPeerLeftRoom().getRoomId();
 
             if (SessionState.currentRoom == null || roomId != SessionState.currentRoom.getId())
@@ -3068,7 +3040,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.MATCH_STATE_CHANGED:
-            console.log('MATCH_STATE_CHANGED message received');
             var roomId = msg.getMatchStateChanged().getRoomId();
 
             if (SessionState.currentRoom == null || roomId != SessionState.currentRoom.getId())
@@ -3122,7 +3093,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.ROOM_PROPERTY_UPDATED:
-            console.log('ROOM_PROPERTY_UPDATED message received');
             var roomId = msg.getRoomPropertyUpdated().getRoomId();
 
             if (SessionState.currentRoom == null || roomId != SessionState.currentRoom.getId())
@@ -3159,7 +3129,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.ROOM_MESSAGE:
-            console.log('ROOM_MESSAGE message received');
             var roomId = msg.getRoomMessage().getRoomId();
 
             if (SessionState.currentRoom == null || roomId != SessionState.currentRoom.getId())
@@ -3175,7 +3144,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
             break;
 
           case OutMessage.Type.ACK:
-            console.log('ACK message received');
             var msgId = msg.getAck().getMsgid();
 
             var listener = SessionState.sndMessageListeners[msgId];
@@ -3860,8 +3828,8 @@ Scoreflex.Realtime.MessageReceivedListener = function RealtimeMessageReceivedLis
      * participant (reliable or not).
      *
      * @param {module:Scoreflex.Realtime.Room} room The room.
-     * @param {string} the sender's ID.
-     * @param {byte} the message's tag.
+     * @param {string} from the sender's ID.
+     * @param {byte} tag the message's tag.
      * @param {module:Scoreflex.Realtime.Map} payload The message that was
      * received.
      *
