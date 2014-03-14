@@ -255,7 +255,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @param {string} method
        * @param {string} url
        * @param {object} params in query string
-       * @param {mixed} body (not supported yet)
+       * @param {mixed} body
        * @param {object} headers
        * @param {module:Scoreflex.SDK.Handlers} handlers
        *
@@ -263,6 +263,10 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Common
        */
       var request = function(method, url, params, body, headers, handlers) {
+        params = paramsToQueryString(params);
+        if (params) {
+          url += '?' + params;
+        }
         var xhr = getXHR(method, url);
         if (headers !== undefined) {
           for (var h in headers) {
@@ -293,8 +297,8 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
               }
             }
           };
-          if (method === 'POST') {
-            xhr.send(params);
+          if (method === 'POST' && body !== undefined && body !== null) {
+            xhr.send(body);
           }
           else {
             xhr.send();
@@ -323,16 +327,16 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @param {string} method
        * @param {string} url
        * @param {object} params
-       * @param {string} body
+       * @param {mixed} body
        * @return {string} signature
        *
        * @private
        * @memberof module:Scoreflex.SDK.Common
        */
       var getSignature = function(method, url, params, body) {
-        if (body === undefined) body = '';
-        if (params === undefined) params = [];
-        var i;
+        if (body === undefined || body === null) body = '';
+        if (params === undefined) params = {};
+        var i, k;
 
         // parse url
         var link = document.createElement('a');
@@ -358,8 +362,15 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         var encode = SFX.Helper.rawurlencode;
 
         // additionnal params (to encode)
-        for (var k in params) {
+        for (k in params) {
           eparams.push({k:encode(k), v:encode(params[k])});
+        }
+        // additional params from the body (to encode)
+        if (typeof(body) === "object") {
+          for (k in body) {
+            eparams.push({k:encode(k), v:encode(body[k])});
+          }
+          body = '';
         }
         // sort all params
         eparams.sort(_sortParams); // sort by keys
@@ -586,7 +597,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
 
 
       /**
-       * Turn a list of object parameters to a query string.
+       * Turn a parameters object to a query string.
        * @param {object} params - key/value pair of query string parameters
        * @return {string} query string
        *
@@ -602,44 +613,67 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       };
 
       /**
+       * Turn a query string to a parameters object.
+       * @param {string} queryString - query string
+       * @return {object} params - key/value pair of query string parameters
+       *
+       * @private
+       * @memberof module:Scoreflex.SDK.RestClient
+       */
+      var queryStringToParams = function(queryString) {
+        var p = queryString.split('&');
+        var params = {};
+        for (var i = 0 ; i < p.length ; i++) {
+          var kv = p[i].split('=');
+          if (kv.length < 2) kv.push('');
+          params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]);
+        }
+        return params;
+      };
+
+      /**
        * Perform a GET request to Scoreflex REST API.
        * @param {string} path - API endpoint path
        * @param {object} params - key/value pair of query string parameters
        * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
+       * @param {object} headers - key/value pair of HTTP headers
        *
        * @public
        * @memberof module:Scoreflex.SDK.RestClient
        */
-      var get = function(path, params, handlers) {
+      var get = function(path, params, handlers, headers) {
         params = addCommonParams(params);
         var url = getUrl(path);
-        var parameters = paramsToQueryString(params);
-        if (parameters) {
-          url = url + '?' + parameters;
-        }
-        var headers = {};
+        headers = headers || {};
         var body = undefined;
-        Common.request('GET', url, {}, body, headers,handlers);
+        Common.request('GET', url, params, body, headers, handlers);
       };
 
       /**
        * Perform a POST request to Scoreflex REST API.
        * @param {string} path - API endpoint path
        * @param {object} params - key/value pair of query string parameters
-       * @param {mixed} body - (not implemented)
+       * @param {mixed} body - object to be www-form-urlencoded, or string, or null/undefined
        * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
+       * @param {object} headers - key/value pair of HTTP headers
        *
        * @public
        * @memberof module:Scoreflex.SDK.RestClient
        */
-      var post = function(path, params, body, handlers) {
+      var post = function(path, params, body, handlers, headers) {
+        headers = headers || {};
         params = addCommonParams(params);
         var url = getUrl(path);
         var parameters = paramsToQueryString(params);
-        var headers = {
-          "Content-type": "application/x-www-form-urlencoded",
-          "X-Scoreflex-Authorization": Common.getSignature('POST', url, params, body)
-        };
+        var bodyForSig = body;
+        if (typeof(body) === "object") {
+          headers["Content-type"] = "application/x-www-form-urlencoded";
+        } else if (headers["Content-type"] === "application/x-www-form-urlencoded" && typeof(body) === "string") {
+          bodyForSig = queryStringToParams(body);
+        } else {
+          bodyForSig = undefined;
+        }
+        headers["X-Scoreflex-Authorization"] = Common.getSignature('POST', url, params, bodyForSig);
         Common.request('POST', url, parameters, body, headers, handlers);
       };
 
