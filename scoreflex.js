@@ -126,7 +126,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       }
       else {
         // Math.random()-based (RNG)
-        for (var i = 0, r; i < 31; i++) {
+        for (var i = 0; i < 31; i++) {
           nums[i] = Math.random()*16|0;
         };
       }
@@ -144,7 +144,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @return {string} deviceId
      */
     getDeviceId: function() {
-      var deviceId;
+      var deviceId = undefined;
       var key = "deviceId";
       if (window.localStorage) deviceId = localStorage.getItem(key);
       if (!deviceId) {
@@ -1607,7 +1607,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       if (!isInitialized()) {
         throw new Scoreflex.InvalidStateException("SDK not initialized");
       }
-      var params = pushParameters(params, parameters);
+      var params = pushParameters({}, parameters);
       RestClient.get("/challenges/instances/"+this.getInstanceId(), params, handlers);
     };
 
@@ -1625,7 +1625,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       if (!isInitialized()) {
         throw new Scoreflex.InvalidStateException("SDK not initialized");
       }
-      var params = pushParameters(params, parameters);
+      var params = pushParameters({}, parameters);
       RestClient.get("/challenges/instances/"+this.getInstanceId()+"/turns", params, handlers);
     };
 
