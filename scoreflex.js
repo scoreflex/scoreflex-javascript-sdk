@@ -252,6 +252,22 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       };
 
       /**
+       * Turn a parameters object to a query string.
+       * @param {object} params - key/value pair of query string parameters
+       * @return {string} query string
+       *
+       * @private
+       * @memberof module:Scoreflex.SDK.Common
+       */
+      var paramsToQueryString = function(params) {
+        var p = [];
+        for (var k in params) {
+          p.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k]));
+        }
+        return p.join('&');
+      };
+
+      /**
        * Ajax call.
        * @param {string} method
        * @param {string} url
@@ -598,22 +614,6 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
 
 
       /**
-       * Turn a parameters object to a query string.
-       * @param {object} params - key/value pair of query string parameters
-       * @return {string} query string
-       *
-       * @private
-       * @memberof module:Scoreflex.SDK.RestClient
-       */
-      var paramsToQueryString = function(params) {
-        var p = [];
-        for (var k in params) {
-          p.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k]));
-        }
-        return p.join('&');
-      };
-
-      /**
        * Turn a query string to a parameters object.
        * @param {string} queryString - query string
        * @return {object} params - key/value pair of query string parameters
@@ -665,7 +665,6 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         headers = headers || {};
         params = addCommonParams(params);
         var url = getUrl(path);
-        var parameters = paramsToQueryString(params);
         var bodyForSig = body;
         if (typeof(body) === "object") {
           headers["Content-type"] = "application/x-www-form-urlencoded";
@@ -675,7 +674,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
           bodyForSig = undefined;
         }
         headers["X-Scoreflex-Authorization"] = Common.getSignature('POST', url, params, bodyForSig);
-        Common.request('POST', url, parameters, body, headers, handlers);
+        Common.request('POST', url, params, body, headers, handlers);
       };
 
       /**
