@@ -1775,17 +1775,37 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       };
 
       /**
-       * Request a challenge and call the onload handler with a
-       * {@link module:Scoreflex.SDK.ChallengeInstance} object.
+       * Create a ChallengeInstance object.
        * @param {string} challengeInstanceId - Challenge instance ID
        * @param {string} challengeConfigId - Challenge configuration ID
+       * @param {object} localDetails - Challenge initial local details (default null)
+       *
        * @return {module:Scoreflex.SDK.ChallengeInstance}
        *
        * @public
        * @memberof module:Scoreflex.SDK.Challenges
        */
-      var get = function(challengeInstanceId, challengeConfigId) {
-        return new ChallengeInstance(challengeInstanceId, challengeConfigId);
+      var get = function(challengeInstanceId, challengeConfigId, localDetails) {
+        return new ChallengeInstance(challengeInstanceId, challengeConfigId, localDetails);
+      };
+
+      /**
+       * Get all the challenge instances for the user
+       * @param {object} parameters - key/value pair of query string parameters. Default {types: ["invitation", "yourTurn"]}
+       * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
+       */
+      var getInstances = function(parameters, handlers) {
+        if (!isInitialized()) {
+          throw new Scoreflex.InvalidStateException("SDK not initialized");
+        }
+        if (parameters === undefined) parameters = {};
+        if (!parameters.types) {
+          parameters.types = ["invitation", "yourTurn"];
+        }
+        var params = pushParameters({}, parameters);
+        RestClient.get("/challenges/instances", params, handlers);
+      };
+
       };
 
       /**
