@@ -1532,12 +1532,14 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * ChallengeInstance object.
      * @param {string} instanceId - Challenge instance ID
      * @param {string} configId - Challenge configuration ID
+     * @param {object} localDetails - Challenge initial local details (default null)
      *
      * @public
      * @class ChallengeInstance
      * @memberof module:Scoreflex.SDK
      */
-    function ChallengeInstance(instanceId, configId) {
+    function ChallengeInstance(instanceId, configId, localDetails) {
+      var cache_details = localDetails || null;
       var cache_players = null;
 
       /**
@@ -1621,25 +1623,45 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
           this.getDetails(parameters, detailsHandlers);
         }
       };
+
+      /**
+       * Request details of the challenge asynchronously
+       * @param {object} parameters - key/value pair of query string parameters
+       * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
+       *
+       * @public
+       * @function module:Scoreflex.SDK.ChallengeInstance#getDetails
+       */
+      this.getDetails = function(parameters, handlers) {
+        if (!isInitialized()) {
+          throw new Scoreflex.InvalidStateException("SDK not initialized");
+        }
+        var params = pushParameters({}, parameters);
+        var local_handlers = handlers;
+        if (!local_handlers) local_handlers = {};
+        var onload_handler = local_handlers.onload;
+        local_handlers.onload = function() {
+          // save detail in cache
+          cache_details = this.responseJSON;
+          // call user's handler
+          if (onload_handler) onload_handler.apply(this, arguments);
+        };
+        RestClient.get("/challenges/instances/"+this.getInstanceId(), params, local_handlers);
+      };
+
+      /**
+       * Return the local details of the challenge. No request is made, but may
+       * be empty or not fully up to date. If empty, you may call getDetails()
+       * @see module:Scoreflex.SDK.ChallengeInstance#getDetails
+       * @return {object} - null if not initialized
+       *
+       * @public
+       * @function module:Scoreflex.SDK.ChallengeInstance#getLocalDetails
+       */
+      this.getLocalDetails = function() {
+        return cache_details;
+      };
     }
-
-    /**
-     * Get details of the challenge.
-     * @param {object} parameters - key/value pair of query string parameters
-     * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
-     *
-     * @public
-     * @function module:Scoreflex.SDK.ChallengeInstance#getDetails
-     */
-    ChallengeInstance.prototype.getDetails = function(parameters, handlers) {
-      if (!isInitialized()) {
-        throw new Scoreflex.InvalidStateException("SDK not initialized");
-      }
-      var params = pushParameters({}, parameters);
-      RestClient.get("/challenges/instances/"+this.getInstanceId(), params, handlers);
-    };
-
-
 
     /**
      * Get turn details of a challenge instance.
