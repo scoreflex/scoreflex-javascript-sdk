@@ -552,6 +552,46 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       },
 
       /**
+       * @param {module:Scoreflex.SDK.ChallengeInstance} challenge - ChallengeIntance instance
+       * @return {ScoreflexEvent}
+       * @private
+       */
+      ScoreflexChallengeUpdateEvent: function(challenge) {
+        /**
+         * ScoreflexEvent to indicate a challenge state has been updated.
+         * @property {string} name "challengeUpdate"
+         * @property {module:Scoreflex.SDK.ChallengeInstance} challenge The Challenge object
+         *
+         * @event ScoreflexChallengeUpdateEvent
+         * @memberof module:Scoreflex.SDK.Events
+         */
+        return {
+          name: "challengeUpdate",
+          challenge: challenge
+        };
+      },
+
+      /**
+       * @param {module:Scoreflex.SDK.ChallengeInstance} challenge - ChallengeIntance instance
+       * @return {ScoreflexEvent}
+       * @private
+       */
+      ScoreflexChallengeNewEvent: function(challenge) {
+        /**
+         * ScoreflexEvent to indicate a new challenge instance is present.
+         * @property {string} name "challengeNew"
+         * @property {module:Scoreflex.SDK.ChallengeInstance} challenge The Challenge object
+         *
+         * @event ScoreflexChallengeNewEvent
+         * @memberof module:Scoreflex.SDK.Events
+         */
+        return {
+          name: "challengeNew",
+          challenge: challenge
+        };
+      },
+
+      /**
        * Fire a ScoreflexEvent in the window object.
        * @param {object} eventData
        *
@@ -1693,10 +1733,10 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       if (!isInitialized()) {
         throw new Scoreflex.InvalidStateException("SDK not initialized");
       }
+      var me = this;
       if (!turnBody || turnBody.turnSequence === undefined) {
         // request the turnSequence if we don't have it
-        var me = this;
-        this.getDetails({fields:"turn"}, {
+        this.getDetails({}, {
           onload: function() {
             var json = this.responseJSON || {};
             var turnSequence = (json.turn || {}).sequence || 0;
@@ -1712,7 +1752,18 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         var params = {body:JSON.stringify(turnBody)};
         params = pushParameters(params, parameters);
         var body = undefined;
-        RestClient.post("/challenges/instances/"+this.getInstanceId()+"/turns", params, body, handlers);
+
+        var local_handlers = handlers;
+        if (!local_handlers) local_handlers = {};
+        var onload_handler = local_handlers.onload;
+        local_handlers.onload = function() {
+          // check the challenge is updated if watched
+          _exports.Challenges.watchUpdateCheck(me);
+          // call user's handler
+          if (onload_handler) onload_handler.apply(this, arguments);
+        };
+
+        RestClient.post("/challenges/instances/"+this.getInstanceId()+"/turns", params, body, local_handlers);
       }
     };
 
@@ -1757,6 +1808,8 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      * @memberof module:Scoreflex.SDK
      */
     var Challenges = (function(exports) {
+      var defaultWatcherInterval = 5000;
+
       /**
        * Display a web client with the list of challenges of the player.
        * @param {object} parameters - key/value pair of query string parameters
@@ -1806,6 +1859,179 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         RestClient.get("/challenges/instances", params, handlers);
       };
 
+
+      /**
+       * Internal variable to store handler & timer when watching challenges
+       *
+       * @private
+       */
+      var _watchNewData = {};
+      var _watchUpdatesData = {};
+
+      /**
+       * Request repeatedly the list of available challenges to check for
+       * playable challenges and invitations available for reply.
+       * @param {Array} types - subset of ["invitation", "yourTurn"] (default to ["invitation", "yourTurn"])
+       * @param {object} options - default {}
+       *                            Valid values are
+       *                            {
+       *                              configIds: [(string)] // config ids to watch
+       *                              maxTurnSequence: (integer) // do not report challenges with bigger turnSequence value
+       *                            }
+       * @param {integer} interval - check in seconds (default 5)
+       * @fires module:Scoreflex.SDK.Events.ScoreflexChallengeNewEvent
+       *
+       * @private
+       * @memberof module:Scoreflex.SDK.Challenges
+       */
+      var watchAllNew = function(types, options, interval) {
+        if (types === undefined) types = ["invitation", "yourTurn"];
+        if (interval === undefined) interval = defaultWatcherInterval;
+        if (options === undefined) options = {};
+        if (options && options.configIds && !SFX.Helper.isArray(options.configIds)) {
+          console.log("Warning. Bad 'options.configIds' in 'Scoreflex.Challenges.watchAllNew'. Ignored.");
+          delete options.configIds;
+        }
+
+        var doRequest = function() {
+          getInstances({types: types}, {
+            onload: function() { watchNewCheck(this.responseJSON, options); }
+          });
+        };
+
+        unwatchAllNew();
+        _watchNewData.ids = {};
+        _watchNewData.timer = setInterval(doRequest, interval);
+        if (isInitialized()) doRequest();
+      };
+
+      /**
+       * Traverse all challengeInstance to find new ones
+       * @param {object} json - response from getInstances()
+       * @param {object} options - keys are configIds, maxTurnSequence
+       * @fires module:Scoreflex.SDK.Events.ScoreflexChallengeNewEvent
+       *
+       * @public
+       * @memberof module:Scoreflex.SDK.Challenges
+       */
+      var watchNewCheck = function(json, options) {
+        var optConfigIds = options.configIds;
+        var optMaxTurnSequence = options.maxTurnSequence;
+        var type, cid, i, configIds, instances, instance, lastUpdate;
+        for (type in json) {
+          configIds = json[type];
+          for (cid in configIds) {
+            // filter out unwanted config ids
+            if (optConfigIds !== undefined && !SFX.Helper.inArray(cid, optConfigIds)) {
+              continue;
+            }
+            instances = configIds[cid];
+            for (i=0; i<instances.length; i++) {
+              instance = instances[i];
+              // filter out instances with too big turnSequence
+              if (optMaxTurnSequence !== undefined && instance.status === "running" && instance.turn && instance.turn.sequence > optMaxTurnSequence) {
+                continue;
+              }
+              lastUpdate = _watchNewData.ids[instance.id] || 0;
+              if (lastUpdate < instance.lastIndexUpdate) {
+                // that's an update
+                _watchNewData.ids[instance.id] = instance.lastIndexUpdate;
+                var challengeInstance = get(instance.id, cid, instance);
+                Events.fire(Events.ScoreflexChallengeNewEvent(challengeInstance));
+              }
+            }
+          }
+        }
+      };
+
+      var unwatchAllNew = function() {
+        if (_watchNewData.timer) {
+          clearInterval(_watchNewData.timer);
+          _watchNewData = {};
+        }
+      };
+
+      /**
+       * Request repeatedly details of a challenge and fires event on update.
+       * Automatically stops watching when challengeInstance.status is "ended".
+       * @param {module:Scoreflex.SDK.ChallengeInstance} challengeInstance
+       * @param {integer} interval - check in seconds (default 5)
+       * @fires module:Scoreflex.SDK.Events.ScoreflexChallengeUpdateEvent
+       *
+       * @public
+       * @memberof module:Scoreflex.SDK.Challenges
+       */
+      var watchUpdates = function(challengeInstance, interval) {
+        if (interval === undefined) interval = defaultWatcherInterval;
+        unwatchUpdates(challengeInstance);
+        var watchId = challengeInstance.getConfigId() + '|' + challengeInstance.getInstanceId();
+        var localDetails = challengeInstance.getLocalDetails() || {};
+
+        var doRequest = function() {
+          challengeInstance.getDetails({}, {
+            onload: function() { watchUpdateCheck(challengeInstance); }
+          });
+        };
+
+        _watchUpdatesData[watchId] = {};
+        _watchUpdatesData[watchId].lastIndexUpdate = localDetails.lastIndexUpdate || 0;
+        _watchUpdatesData[watchId].timer = setInterval(doRequest, interval);
+        if (isInitialized()) doRequest();
+      };
+
+      /**
+       * Fires a {module:Scoreflex.SDK.Events.ScoreflexChallengeUpdateEvent}
+       * if challenge has been updated.
+       * @param {module:Scoreflex.SDK.ChallengeInstance} challengeInstance
+       * @fires module:Scoreflex.SDK.Events.ScoreflexChallengeUpdateEvent
+       *
+       * @private
+       * @memberof module:Scoreflex.SDK.Challenges
+       */
+      var watchUpdateCheck = function(challengeInstance) {
+        var watchId = challengeInstance.getConfigId() + '|' + challengeInstance.getInstanceId();
+        if (_watchUpdatesData[watchId]) {
+          var localDetails = challengeInstance.getLocalDetails() || {};
+          // send an update event ?
+          if (_watchUpdatesData[watchId].lastIndexUpdate !== localDetails.lastIndexUpdate) {
+            _watchUpdatesData[watchId].lastIndexUpdate = localDetails.lastIndexUpdate;
+            Events.fire(Events.ScoreflexChallengeUpdateEvent(challengeInstance));
+          }
+          // stop watching on status == "ended"
+          if (localDetails.status === "ended") {
+            unwatchUpdates(challengeInstance);
+          }
+        }
+      };
+
+      /**
+       * Stop watching the challenge updates
+       * @see module:Scoreflex.SDK.Challenges.watchUpdates
+       * @param {module:Scoreflex.SDK.ChallengeInstance} challengeInstance
+       *
+       * @public
+       * @memberof module:Scoreflex.SDK.Challenges
+       */
+      var unwatchUpdates = function(challengeInstance) {
+        var watchId = challengeInstance.getConfigId() + '|' + challengeInstance.getInstanceId();
+        if (_watchUpdatesData[watchId]) {
+          clearInterval(_watchUpdatesData[watchId].timer);
+          delete _watchUpdatesData[watchId];
+        }
+      };
+
+      /**
+       * Stop watching all challenge updates
+       * @see module:Scoreflex.SDK.Challenges.unwatchUpdates
+       *
+       * @public
+       * @memberof module:Scoreflex.SDK.Challenges
+       */
+      var unwatchAllUpdates = function() {
+        for (var id in _watchUpdatesData) {
+          var cids = id.split('_');
+          unwatchUpdates(get(cids[0], cids[1]));
+        }
       };
 
       /**
@@ -1814,11 +2040,14 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Challenges
        */
       var destroy = function() {
-        // nothing to clean up
+        // unwatch all watched challenges
+        unwatchAllNew();
+        unwatchAllUpdates();
       };
 
       exports.Challenges = {
-        destroy:destroy
+        destroy:destroy,
+        watchUpdateCheck:watchUpdateCheck
       };
 
       return  {
