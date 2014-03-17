@@ -2052,7 +2052,13 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
 
       return  {
         showChallenges:showChallenges,
-        get:get
+        get:get,
+        getInstances:getInstances,
+        watchAllNew:watchAllNew,
+        unwatchAllNew:unwatchAllNew,
+        watchUpdates:watchUpdates,
+        unwatchUpdates:unwatchUpdates,
+        unwatchAllUpdates:unwatchUpdates
       };
     })(_exports);
     //-- Challenges static end
