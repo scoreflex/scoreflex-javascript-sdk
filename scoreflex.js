@@ -28,6 +28,7 @@
  * - browser support for localStorage API
  * - browser support for XMLHttpRequest2 (support for CORS requests)
  * - browser support for classList API
+ * - create the bind method to Function prototype if absent
  */
 
 /**
@@ -42,6 +43,23 @@
  **/
 var Scoreflex = function(clientId, clientSecret, useSandbox) {
 "use strict";
+
+  if (typeof Function.prototype.bind != 'function') {
+    /**
+     * Return the scoped function with optionally prepended arguments.
+     * The first argument is the value of `this' inside the function.
+     * The following arguments will be prepended to the actual arguments
+     * given to the wrapper.
+     */
+    Function.prototype.bind = function(thisArg /*, args...*/) {
+      var fn = this;
+      var args = Array.prototype.slice.call(arguments);
+      args.shift();
+      return function() {
+        return fn.apply(thisArg, args.concat(Array.prototype.slice.call(arguments)));
+      };
+    };
+  }
 
   var SFX = {};
 
@@ -64,6 +82,16 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         if (arr[i] === el) return true;
       }
       return false;
+    },
+
+    /**
+     * Test an element is an Array
+     * @private
+     * @param {object} o
+     * @return boolean
+     */
+    isArray: function(o){
+      return Object.prototype.toString.call(o) === '[object Array]';
     },
 
     /**
