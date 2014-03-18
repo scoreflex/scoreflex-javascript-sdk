@@ -578,7 +578,8 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        */
       ScoreflexChallengeNewEvent: function(challenge) {
         /**
-         * ScoreflexEvent to indicate a new challenge instance is present.
+         * ScoreflexEvent to indicate a new challenge instance is present
+         * (invitation or playable instance).
          * @property {string} name "challengeNew"
          * @property {module:Scoreflex.SDK.ChallengeInstance} challenge The Challenge object
          *
@@ -1537,7 +1538,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
      */
     var Leaderboards = (function(exports) {
       /**
-       * Get a Leaderboard instance
+       * Get a Leaderboard instance (synchronous, no request)
        * @return {module:Scoreflex.SDK.Leaderboard} Leaderboard instance
        *
        * @public
@@ -1704,7 +1705,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
     }
 
     /**
-     * Get turn details of a challenge instance.
+     * Request turn details of a challenge instance.
      * @param {object} parameters - key/value pair of query string parameters
      * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
      *
@@ -1828,7 +1829,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       };
 
       /**
-       * Create a ChallengeInstance object.
+       * Create a ChallengeInstance object (synchronous, no request)
        * @param {string} challengeInstanceId - Challenge instance ID
        * @param {string} challengeConfigId - Challenge configuration ID
        * @param {object} localDetails - Challenge initial local details (default null)
@@ -1846,6 +1847,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * Get all the challenge instances for the user
        * @param {object} parameters - key/value pair of query string parameters. Default {types: ["invitation", "yourTurn"]}
        * @param {module:Scoreflex.SDK.Handlers} handlers - request callbacks
+       *
+       * @public
+       * @memberof module:Scoreflex.SDK.Challenges
        */
       var getInstances = function(parameters, handlers) {
         if (!isInitialized()) {
@@ -1873,15 +1877,15 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * playable challenges and invitations available for reply.
        * @param {Array} types - subset of ["invitation", "yourTurn"] (default to ["invitation", "yourTurn"])
        * @param {object} options - default {}
-       *                            Valid values are
-       *                            {
-       *                              configIds: [(string)] // config ids to watch
-       *                              maxTurnSequence: (integer) // do not report challenges with bigger turnSequence value
-       *                            }
-       * @param {integer} interval - check in seconds (default 5)
+       *                            <br />Valid values are
+       *                            <br />{
+       *                            <br />  configIds: [(string)] // config ids to watch
+       *                            <br />  maxTurnSequence: (integer) // do not report challenges with bigger turnSequence value
+       *                            <br />}
+       * @param {integer} interval - check interval in milliseconds (default 5000)
        * @fires module:Scoreflex.SDK.Events.ScoreflexChallengeNewEvent
        *
-       * @private
+       * @public
        * @memberof module:Scoreflex.SDK.Challenges
        */
       var watchAllNew = function(types, options, interval) {
@@ -1911,7 +1915,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @param {object} options - keys are configIds, maxTurnSequence
        * @fires module:Scoreflex.SDK.Events.ScoreflexChallengeNewEvent
        *
-       * @public
+       * @private
        * @memberof module:Scoreflex.SDK.Challenges
        */
       var watchNewCheck = function(json, options) {
@@ -1944,6 +1948,13 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
         }
       };
 
+      /**
+       * Stop watching for the new challenge instances
+       * @see module:Scoreflex.SDK.Challenges.watchAllNew
+       *
+       * @public
+       * @memberof module:Scoreflex.SDK.Challenges
+       */
       var unwatchAllNew = function() {
         if (_watchNewData.timer) {
           clearInterval(_watchNewData.timer);
@@ -1955,7 +1966,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * Request repeatedly details of a challenge and fires event on update.
        * Automatically stops watching when challengeInstance.status is "ended".
        * @param {module:Scoreflex.SDK.ChallengeInstance} challengeInstance
-       * @param {integer} interval - check in seconds (default 5)
+       * @param {integer} interval - check interval in milliseconds (default 5000)
        * @fires module:Scoreflex.SDK.Events.ScoreflexChallengeUpdateEvent
        *
        * @public
