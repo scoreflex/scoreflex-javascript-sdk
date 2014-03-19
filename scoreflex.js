@@ -440,6 +440,120 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
     })();
     //-- Common end
 
+    //-- Timing
+    /**
+     * Scoreflex Timing objects
+     * @public
+     * @namespace Timing
+     * @memberof module:Scoreflex.SDK
+     */
+    var Timing = {
+      /**
+       * Scoreflex timing curve functions
+       * @public
+       * @namespace Curve
+       * @memberof module:Scoreflex.SDK.Timing
+       */
+      Curve: {
+        /**
+         * Get a constant function (interval is always the same).
+         * <pre>
+         * (wait time)
+         *  ^
+         *  |
+         * c|--------------------------
+         *  |__________________________ (watch time)
+         * </pre>
+         * @param {integer} c - the constant interval in seconds [default 5]
+         * @return Function
+         *
+         * @public
+         * @memberof module:Scoreflex.SDK.Timing.Curve
+         */
+        getConstantTimer: function(c) {
+          if (c === undefined) c = 5;
+          return function(t) {return c;};
+        },
+        /**
+         * Get a easing function with the shape of an arctan (minimum wait time to maximum wait time smoothed)
+         * <pre>
+         * (wait time)
+         *   ^
+         *   |       |--p--|
+         * ra|              ____---------
+         *   |           ./
+         *   |         /
+         * la|______--'
+         *   |_____________________________ (watch time)
+         *              m
+         * </pre>
+         * @param {interger} la - left asymptote value (for time=0), ie, minimum waiting time in seconds [default 5]
+         * @param {integer} ra - right asymptot value (for time=infinite), ie, maximum waiting time in seconds [default 60]
+         * @param {integer} m - the middle point of the easing function, ie, the time in seconds when we wait for the mean of `la` and `ra` [default 600]
+         * @param {integer} p - the pace for going from `la` to `ra` around `m` (small value for higher velocity) [default m/5]
+         * @return Function
+         *
+         * @public
+         * @memberof module:Scoreflex.SDK.Timing.Curve
+         */
+        getInOutTimer: function(la, ra, m, p) {
+          if (la === undefined) la = 5;
+          if (ra === undefined) ra = 60;
+          if (m === undefined) m = 600;
+          if (p === undefined) p = m/5;
+          var scale = 2/Math.PI * (ra-la)/2;
+          var dy = ra/2;
+
+          //return function(t) {return (Math.atan((t-m)/p)*2/pi+1)*(ra-la)/2+la/2;};
+          return function(t) {return Math.atan((t-m)/p)*scale+dy;};
+        }
+      },
+
+      /**
+       * Create a new Scheduler object that contains necessary data to repeatedly call a function.
+       * The `resume` and `destroy` methods are meant to be called from the callback.
+       * @param {module:Scoreflex.SDK.Timing.Curve} curve - Timing.Curve function(elapsedTime) {return waitingDuration;}
+       * @param {Function} callback - a function called when the waitingDuration is elasped.
+       *
+       * @public
+       * @class Scheduler
+       * @memberof module:Scoreflex.SDK.Timing
+       */
+      Scheduler: function(curve, callback) {
+        var start = +new Date();
+        var timeoutMS = Math.round(curve(0)*1000);
+        var timeoutID = setTimeout(callback, timeoutMS);
+
+        /**
+         * Resume the scheduler. The scheduler is stopped each time the callback is called.
+         * @param {boolean} reset - reset the elapsed time to 0, changing the value returned by the timer function (default false)
+         *
+         * @public
+         * @function module:Scoreflex.SDK.Timing.Scheduler#resume
+         */
+        this.resume = function(reset) {
+          var currentDate = +new Date();
+          if (reset === true) {
+            start = currentDate;
+          }
+          clearTimeout(timeoutID); // make sure we don't resume twice
+          var elapsedSeconds = Math.round((currentDate - start)/1000);
+          var timeoutMS = Math.round(curve(elapsedSeconds)*1000);
+          timeoutID = setTimeout(callback, timeoutMS);
+        };
+
+        /**
+         * Stop and destroy a scheduler
+         *
+         * @public
+         * @function module:Scoreflex.SDK.Timing.Scheduler#destroy
+         */
+        this.destroy = function() {
+          clearTimeout(timeoutID);
+        };
+      }
+    };
+    //-- Timing
 
     //-- Handlers
     /**
@@ -1878,35 +1992,40 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @param {Array} types - subset of ["invitation", "yourTurn"] (default to ["invitation", "yourTurn"])
        * @param {object} options - default {}
        *                            <br />Valid values are
-       *                            <br />{
-       *                            <br />  configIds: [(string)] // config ids to watch
-       *                            <br />  maxTurnSequence: (integer) // do not report challenges with bigger turnSequence value
-       *                            <br />}
-       * @param {integer} interval - check interval in milliseconds (default 5000)
+       *                            <ul>
+       *                            <li>configIds: [(string)] // config ids to watch
+       *                            <li>maxTurnSequence: (integer) // do not report challenges with bigger turnSequence value
+       *                            </ul>
+       * @param {Timing.Curve|integer} timer - check interval timer Function
+       *            (default Timing.Curve.getConstantTimer(5)).
+       *            <br />The watching time goes back to 0 each time an update is found.
+       * @see module:Scoreflex.SDK.Timing.Curve
        * @fires module:Scoreflex.SDK.Events.ScoreflexChallengeNewEvent
        *
        * @public
        * @memberof module:Scoreflex.SDK.Challenges
        */
-      var watchAllNew = function(types, options, interval) {
+      var watchAllNew = function(types, options, timer) {
         if (types === undefined) types = ["invitation", "yourTurn"];
-        if (interval === undefined) interval = defaultWatcherInterval;
         if (options === undefined) options = {};
         if (options && options.configIds && !SFX.Helper.isArray(options.configIds)) {
           console.log("Warning. Bad 'options.configIds' in 'Scoreflex.Challenges.watchAllNew'. Ignored.");
           delete options.configIds;
         }
+        if (typeof timer === 'number') timer = Timing.Curve.getConstantTimer(timer);
+        if (timer === undefined || typeof timer !== 'Function') timer = Timing.Curve.getConstantTimer(5);
 
         var doRequest = function() {
           getInstances({types: types}, {
-            onload: function() { watchNewCheck(this.responseJSON, options); }
+            onload: function() {
+              watchNewCheck(this.responseJSON, options);
+            }
           });
         };
 
         unwatchAllNew();
         _watchNewData.ids = {};
-        _watchNewData.timer = setInterval(doRequest, interval);
-        if (isInitialized()) doRequest();
+        _watchNewData.scheduler = new Timing.Scheduler(timer, doRequest);
       };
 
       /**
@@ -1919,6 +2038,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Challenges
        */
       var watchNewCheck = function(json, options) {
+        var found = false;
         var optConfigIds = options.configIds;
         var optMaxTurnSequence = options.maxTurnSequence;
         var type, cid, i, configIds, instances, instance, lastUpdate;
@@ -1942,10 +2062,13 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
                 _watchNewData.ids[instance.id] = instance.lastIndexUpdate;
                 var challengeInstance = get(instance.id, cid, instance);
                 Events.fire(Events.ScoreflexChallengeNewEvent(challengeInstance));
+                found = true;
               }
             }
           }
         }
+        // continue watching
+        _watchNewData.scheduler.resume(found);
       };
 
       /**
@@ -1956,8 +2079,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Challenges
        */
       var unwatchAllNew = function() {
-        if (_watchNewData.timer) {
-          clearInterval(_watchNewData.timer);
+        if (_watchNewData.scheduler) {
+          _watchNewData.scheduler.destroy();
+          delete _watchNewData.scheduler;
           _watchNewData = {};
         }
       };
@@ -1966,28 +2090,34 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * Request repeatedly details of a challenge and fires event on update.
        * Automatically stops watching when challengeInstance.status is "ended".
        * @param {module:Scoreflex.SDK.ChallengeInstance} challengeInstance
-       * @param {integer} interval - check interval in milliseconds (default 5000)
+       * @param {Timing.Curve|integer} timer - check interval timer Function
+       *            (default Timing.Curve.getInOutTimer(60,5,600,60)).
+       *            <br />The watching time goes back to 0 each time an update is found.
+       * @see module:Scoreflex.SDK.Timing.Curve
        * @fires module:Scoreflex.SDK.Events.ScoreflexChallengeUpdateEvent
        *
        * @public
        * @memberof module:Scoreflex.SDK.Challenges
        */
-      var watchUpdates = function(challengeInstance, interval) {
-        if (interval === undefined) interval = defaultWatcherInterval;
+      var watchUpdates = function(challengeInstance, timer) {
+        if (typeof timer === 'number') timer = Timing.Curve.getConstantTimer(timer);
+        if (timer === undefined || typeof timer !== 'Function') timer = Timing.Curve.getInOutTimer(5,60,600,120);
+
         unwatchUpdates(challengeInstance);
         var watchId = challengeInstance.getConfigId() + '|' + challengeInstance.getInstanceId();
         var localDetails = challengeInstance.getLocalDetails() || {};
 
         var doRequest = function() {
           challengeInstance.getDetails({}, {
-            onload: function() { watchUpdateCheck(challengeInstance); }
+            onload: function() {
+              watchUpdateCheck(challengeInstance);
+            }
           });
         };
 
         _watchUpdatesData[watchId] = {};
         _watchUpdatesData[watchId].lastIndexUpdate = localDetails.lastIndexUpdate || 0;
-        _watchUpdatesData[watchId].timer = setInterval(doRequest, interval);
-        if (isInitialized()) doRequest();
+        _watchUpdatesData[watchId].scheduler = new Timing.Scheduler(timer, doRequest);
       };
 
       /**
@@ -2000,6 +2130,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * @memberof module:Scoreflex.SDK.Challenges
        */
       var watchUpdateCheck = function(challengeInstance) {
+        var updated = false;
         var watchId = challengeInstance.getConfigId() + '|' + challengeInstance.getInstanceId();
         if (_watchUpdatesData[watchId]) {
           var localDetails = challengeInstance.getLocalDetails() || {};
@@ -2007,10 +2138,15 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
           if (_watchUpdatesData[watchId].lastIndexUpdate !== localDetails.lastIndexUpdate) {
             _watchUpdatesData[watchId].lastIndexUpdate = localDetails.lastIndexUpdate;
             Events.fire(Events.ScoreflexChallengeUpdateEvent(challengeInstance));
+            updated = true;
           }
           // stop watching on status == "ended"
           if (localDetails.status === "ended") {
             unwatchUpdates(challengeInstance);
+          }
+          else {
+            // continue watching
+            _watchUpdatesData[watchId].scheduler.resume(updated);
           }
         }
       };
@@ -2025,8 +2161,9 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        */
       var unwatchUpdates = function(challengeInstance) {
         var watchId = challengeInstance.getConfigId() + '|' + challengeInstance.getInstanceId();
-        if (_watchUpdatesData[watchId]) {
-          clearInterval(_watchUpdatesData[watchId].timer);
+        if (_watchUpdatesData[watchId] && _watchUpdatesData[watchId].scheduler) {
+          _watchUpdatesData[watchId].scheduler.destroy();
+          _watchUpdatesData[watchId].scheduler = null;
           delete _watchUpdatesData[watchId];
         }
       };
@@ -2474,7 +2611,8 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
       // objects
       Leaderboards: Leaderboards,
       Players: Players,
-      Challenges: Challenges
+      Challenges: Challenges,
+      Timing:Timing
     };
 
   })(clientId, clientSecret, useSandbox);
