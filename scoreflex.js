@@ -2091,7 +2091,7 @@ var Scoreflex = function(clientId, clientSecret, useSandbox) {
        * Automatically stops watching when challengeInstance.status is "ended".
        * @param {module:Scoreflex.SDK.ChallengeInstance} challengeInstance
        * @param {Timing.Curve|integer} timer - check interval timer Function
-       *            (default Timing.Curve.getInOutTimer(60,5,600,60)).
+       *            (default Timing.Curve.getInOutTimer(5,60,600,120)).
        *            <br />The watching time goes back to 0 each time an update is found.
        * @see module:Scoreflex.SDK.Timing.Curve
        * @fires module:Scoreflex.SDK.Events.ScoreflexChallengeUpdateEvent
