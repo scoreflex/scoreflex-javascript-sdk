@@ -74,75 +74,68 @@ Scoreflex.Realtime.StatusCode = {
     STATUS_REPLACED_BY_NEW_CONNECTION: 4,
 
     /**
-     * The status code used in [ConnectionListener.onReconnecting]{@link
-     * module:Scoreflex.Realtime.ConnectionListener.onReconnecting} when the
-     * server requests the client to reconnect on a specific host.
-     */
-    STATUS_NEW_SERVER_LOCATION: 5,
-
-    /**
      * The status code used in [ConnectionListener.onConnectionFailed]{@link
      * module:Scoreflex.Realtime.ConnectionListener.onConnectionFailed} or
      * [MessageSentListener.onFailure]{@link
      * module:Scoreflex.Realtime.MessageSentListener.onFailure} when a malformed
      * message is sent by the player.
      */
-    STATUS_INVALID_MESSAGE: 6,
+    STATUS_INVALID_MESSAGE: 5,
 
     /**
      * The status code used in [ConnectionListener.onConnectionFailed]{@link
      * module:Scoreflex.Realtime.ConnectionListener.onConnectionFailed} when an
      * unknown message was sent to the server.
      */
-    STATUS_PROTOCOL_ERROR: 7,
+    STATUS_PROTOCOL_ERROR: 6,
 
     /**
      * The status code used in callbacks when the player does not have
      * permissions to perform an operation.
      */
-    STATUS_PERMISSION_DENIED: 8,
+    STATUS_PERMISSION_DENIED: 7,
 
     /**
      * The status code used in [ConnectionListener.onConnectionFailed]{@link
      * module:Scoreflex.Realtime.ConnectionListener.onConnectionFailed} event
      * when the player has already a opened session on another device.
      */
-    STATUS_ALREADY_CONNECTED: 9,
+    STATUS_ALREADY_CONNECTED: 8,
 
     /**
      * The status code used in [RoomListener]{@link
      * module:Scoreflex.Realtime.RoomListener} when the player attempts to
      * perform an operation while his session is not connected on the service.
      */
-    STATUS_SESSION_NOT_CONNECTED: 10,
+    STATUS_SESSION_NOT_CONNECTED: 9,
 
     /**
      * The status code used in [RoomListener]{@link
      * module:Scoreflex.Realtime.RoomListener} when the player attempts to
      * perform an operation on a room that he did not joined first.
      */
-    STATUS_ROOM_NOT_JOINED: 11,
+    STATUS_ROOM_NOT_JOINED: 10,
 
     /**
      * The status code used in [RoomListener.onRoomCreated]{@link
      * module:Scoreflex.Realtime.RoomListener.onRoomCreated} when the player
      * attempts to create a room with the same ID than an existing one.
      */
-    STATUS_ROOM_ALREADY_CREATED: 12,
+    STATUS_ROOM_ALREADY_CREATED: 11,
 
     /**
      * The status code used [RoomListener.onRoomClosed]{@link
      * module:Scoreflex.Realtime.RoomListener.onRoomClosed} when the the room is
      * closed normally by an external way.
      */
-    STATUS_ROOM_CLOSED: 13,
+    STATUS_ROOM_CLOSED: 12,
 
     /**
      * The status code used [RoomListener.onRoomJoined]{@link
      * module:Scoreflex.Realtime.RoomListener.onRoomJoined} when the player
      * attempts to join a unknown room.
      */
-    STATUS_ROOM_NOT_FOUND: 14,
+    STATUS_ROOM_NOT_FOUND: 13,
 
     /**
      * The status code used in [RoomListener.onRoomJoined]{@link
@@ -150,42 +143,42 @@ Scoreflex.Realtime.StatusCode = {
      * attempts to join a room which the maximum number of participants allowed
      * was reached.
      */
-    STATUS_ROOM_FULL: 15,
+    STATUS_ROOM_FULL: 14,
 
     /**
      * The status code used in [RoomListener.onRoomJoined]{@link
      * module:Scoreflex.Realtime.RoomListener.onRoomJoined} when the player
      * attempts to join awith a state that does not match its join strategy.
      */
-    STATUS_STRATEGY_MISMATCH: 16,
+    STATUS_STRATEGY_MISMATCH: 15,
 
     /**
      * The status code used in [RoomListener.onRoomCreated]{@link
      * module:Scoreflex.Realtime.RoomListener.onRoomCreated} when the player
      * uses an invalid configuration to create a room.
      */
-    STATUS_INVALID_DATA: 17,
+    STATUS_INVALID_DATA: 16,
 
     /**
      * The status code used in [RoomListener.onMatchStateChanged]{@link
      * module:Scoreflex.Realtime.RoomListener.onMatchStateChanged} when the
      * player attempts to do an invalid change of the match's state.
      */
-    STATUS_BAD_STATE: 18,
+    STATUS_BAD_STATE: 17,
 
     /**
      * The status code used in [MessageSentListener.onFailure]{@link
      * module:Scoreflex.Realtime.MessageSentListener.onFailure} when the player
      * attempts to send a reliable message to a unknown participant.
      */
-    STATUS_PEER_NOT_FOUND: 19,
+    STATUS_PEER_NOT_FOUND: 18,
 
     /**
      * The status code used in [RoomListener.onSetRoomPropertyFailed]{@link
      * module:Scoreflex.Realtime.RoomListener.onSetRoomPropertyFailed} when the
      * player attempts to change the room's property while it is forbidden.
      */
-    STATUS_UPDATE_FORBIDDEN: 20
+    STATUS_UPDATE_FORBIDDEN: 19
 };
 
 /**
@@ -2791,17 +2784,6 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
                         connectionListener.onConnectionFailed(StatusCode.STATUS_NETWORK_ERROR);
                 }
                 break;
-              case RealtimeProto.ConnectionClosed.StatusCode.NEW_SERVER_LOCATION:
-                SessionState.host    = msg.getConnectionClosed().getHostname();
-                SessionState.port    = msg.getConnectionClosed().getPort();
-                SessionState.retries = 0;
-
-                if (isConnected()) {
-                    if (connectionListener.onReconnecting)
-                        connectionListener.onReconnecting(StatusCode.STATUS_NEW_SERVER_LOCATION);
-                }
-                connect(connectionListener);
-                break;
             }
             break;
 
@@ -3507,9 +3489,6 @@ Scoreflex.Realtime.ConnectionListener = function RealtimeConnectionListener() {
      *   error occurred. If automatic reconnection was configured, when a
      *   network error is detected, the connection will be automatically
      *   reopened.</li>
-     *   <li>[STATUS_NEW_SERVER_LOCATION]{@link
-     *   module:Scoreflex.Realtime.StatusCode.STATUS_NEW_SERVER_LOCATION} The
-     *   server requests the client to reconnect on a specific host.</li>
      * </ul>
      *
      * @param {module:Scoreflex.Realtime.StatusCode} status Status code
