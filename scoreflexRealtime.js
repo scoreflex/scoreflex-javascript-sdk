@@ -1558,6 +1558,28 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
         scoreflexSDK.RestClient.get('/realtime/serviceInfo', {}, {onload: onLoad, onerror: onError});
     };
 
+    var initialize2 = function(wsServer, listener) {
+        if (!scoreflexSDK.getSessionState() ==  Scoreflex.SessionState.INIT_SUCCESS)
+            throw new Scoreflex.InvalidStateException('Scoreflex SDK is not initialized');
+        if (SessionState.state === State.INITIALIZED)
+            throw new Scoreflex.InvalidStateException('Realtime session already initialized');
+        if (SessionState.state === State.INITIALIZING)
+            throw new Scoreflex.InvalidStateException('Realtime session initialization already started');
+        if (wsServer == undefined || wsServer.host == undefined ||
+            wsServer.port == undefined || wsServer.path == undefined)
+            throw new Scoreflex.InvalidArgumentException('invalid wsServer argument');
+        if (listener == undefined)
+            throw new Scoreflex.InvalidArgumentException('Session listener cannot be undefined');
+
+        SessionState.state           = State.INITIALIZED;
+        SessionState.sessionListener = listener;
+        SessionState.host            = wsServer.host;
+        SessionState.port            = wsServer.port;
+        SessionState.uri             = wsServer.path;
+        if (SessionState.sessionListener.onInitialized)
+            SessionState.sessionListener.onInitialized();
+    };
+
     /**
      * Deinitialize the realtime session.
      *
@@ -3288,6 +3310,7 @@ Scoreflex.Realtime.Session = function RealtimeSession(scoreflexSDK, clientId, pl
     //-- Session API
 
     this.initialize           = initialize;
+    this.initialize2          = initialize2;
     this.deinitialize         = deinitialize;
     this.isInitialized        = isInitialized;
     this.getServerAddr        = getServerAddr;
