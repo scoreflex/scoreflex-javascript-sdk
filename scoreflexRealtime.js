@@ -397,7 +397,7 @@ Scoreflex.Realtime.RoomConfig = function RealtimeRoomConfig(roomListener, messag
      *
      * @param {boolean} s The strategy value. It can be
      * <code>beforeFirstStart</code>, <code>beforeStart</code> or
-     * <code>anymore</code>.
+     * <code>anytime</code>.
      *
      * @return {module:Scoreflex.Realtime.RoomConfig} The current configuration
      * object.
@@ -409,6 +409,26 @@ Scoreflex.Realtime.RoomConfig = function RealtimeRoomConfig(roomListener, messag
      */
     this.setJoinStrategy = function(s) {
         this.config['joinStratey'] = s;
+        return this;
+    };
+
+    /**
+     * Sets the server-side script to use. This is an optional parameter.
+     * <br>
+     * This option is unset by default.
+     *
+     * @param {string} s The script name
+     *
+     * @return {module:Scoreflex.Realtime.RoomConfig} The current configuration
+     * object.
+     *
+     * @method setServerScript
+     * @memberof module:Scoreflex.Realtime.RoomConfig
+     * @instance
+     * @public
+     */
+    this.setServerScript = function(s) {
+        this.config['script'] = s;
         return this;
     };
 };
